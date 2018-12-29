@@ -1,0 +1,5 @@
+linux-stable/*
+out/*
+qemu/*
+rootfs/*
+linux-stable/

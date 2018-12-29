@@ -1,0 +1,11 @@
+#!/bin/sh
+
+CURRDIR=`pwd`
+
+echo $CURRDIR
+
+git clone https://github.com/wxx213/kernel-3.18.git $CURRDIR/linux-stable
+
+git clone https://github.com/wxx213/qemu-2.12.git $CURRDIR/qemu/qemu-2.12.1
+
+git clone https://github.com/wxx213/busybox_rootfs.git $CURRDIR/rootfs/busybox
