@@ -1,0 +1,232 @@
+安装ssh： sudo apt-get install openssh-server
+
+查看ssh服务是否启动： 打开"终端窗口"，输入"sudo ps -e |grep ssh"-->回车-->有sshd,说明ssh服务已经启动，如果没有启动，输入"sudo service ssh start"-->回车-->ssh服务就会启动
+
+
+安装文件传输软件samba
+sudo apt-get install samba
+sudo apt-get install nautilus-share
+
+增加一个现有用户的对应samba帐号：
+
+如我已经有一个用户叫reddy，现在给reddy开通samba帐号：
+
+sudo smbpasswd -a reddy
+
+根据提示输入两次密码即可
+
+
+安装arm-linux-gcc
+ 1.解压文件
+
+解压 tar -zxvf arm-linux-gcc-4.4.3.tar.gz -C/（ 
+
+直接解压后就可以，-C/会让解压的文件自动放在根目录下指定路径，不用管）
+下载arm-linux-gcc-4.4.3.tgz到任意的目录下，进入这个文件夹
+
+sudo tar -xvzf arm-linux-gcc-4.4.3.tgz –C /
+
+5.添加环境变量
+
+网上很多修改环境变量的方法，很杂。有 redhat上面的,fedora。下面一共三种方法，有人都在UBUNTU11.10上试过，可行。（本人只用了第一种方法做过，其他的没有试过）
+
+方法一：修改/etc/bash.bashrc文件（此文件只对当前用户适用）
+sudo gedit /etc/bash.bashrc
+在最后加上 export PATH=/usr/local/arm/opt/FriendlyARM/toolschain/4.4.3/bin:$PATH  (路径)(注意等号那边不要有空格)
+
+
+6.注册环境变量（此步未做，步骤8同样显示安装成功）
+
+立即使新的环境变量生效，不用重启电脑，对应步骤5也有3种方法
+方法一：source /root/.bashrc
+    或者
+   ./etc/bash.bashrc
+
+安装32位的库，使64位的Linux系统能够兼容arm-linux-gcc 交叉编译器
+	sudo apt-get install lib32stdc++6
+	sudo apt-get install libc6-i386
+	sudo apt-get install lib32z1 lib32ncurses5
+
+安装make menuconfig 所依赖的包
+	sudo apt-get install libncurses5-dev
+
+
+1、修改Makefile如下
+在编译内核的时候提示Makefile:1449: *** mixed implicit and normal rules.  Stop.
+         在网上查找后得到如下原因：
+翻译为中文：混合的和隐含普通规则
+         
+        是由于我的系统的make工具太新（系统：fedora15），make的旧版规则已经无法兼容新版。按照以下方式，问题得到解决：
+
+         修改前：416行 config %config: scripts_basic outputmakefile FORCE
+
+         修改后：416 行 %config: scripts_basic outputmakefile FORCE
+        
+         修改前：1449 行 / %/: prepare scripts FORCE
+
+         修改后：1449 行 %/: prepare scripts FORCE
+2、make smdk2410_defconfig
+
+3、在把yaff2编译进去以后，要在make menuconfig里把支持yaffs2的选项选上
+
+4、make uImage
+
+
+
+挂载U盘
+二、配置内核
+１、让内核支持热插拔
+               General setup  --->  
+[*] Support for hot-pluggable devices 
+２、USB驱动设置，可能有些不选也行，不过没时间去试，至于为什么要选这些选项的话可以看一下这个贴（Linux下的硬件驱动——USB设备）：
+http://www-128.ibm.com/developerworks/cn/linux/l-usb/index1.html 
+          Device Drivers  ---> 
+             Generic Driver Options  --->           
+               <*> Hotplug firmware loading support    
+             Block devices  --->   
+             <*> Low Performance USB Block driver   
+             SCSI device support  --->   
+               <*>   SCSI generic support  
+               [*]   Probe all LUNs on each SCSI device    
+USB support  --->        
+<*> Support for Host-side USB    
+[*]   USB device filesystem 
+<*>   OHCI HCD support  
+<*>   USB Mass Storage support 
+[*]   USB Monitor 
+３、加入了MSDOS fs和VFAT fs的支持。 
+                File systems  --->      
+        DOS/FAT/NT Filesystems  --->  
+                    <*> MSDOS fs support                          
+                    <*> VFAT (Windows-95) fs support              
+                   (936) Default codepage for FAT                  
+                   (cp936) Default iocharset for FAT               
+                    < > NTFS file system support 
+4. 加入对中文的支持，就可以显示出中文了
+       Native Language Support  ---> 
+	   <*>   Codepage 437 (United States, Canada)    
+           <*>   Simplified Chinese charset (CP936, GB2312)  
+           <*>   NLS UTF8
+
+
+
+在开发板上执行挂载命令
+[root@ /]mount -t vfat -o iocharset=cp936 /dev/uba1 /mnt/usb
+
+PS:目前挂载的U盘不支持热插拔和自动挂载
+
+
+
+移植内核 linux 2.6.22.6
+1，修改系统时钟，将arch/arm/match-s3c2440/match-smdk2440.c中的line 180 s3c24xx_init_clocks(1693440);改为 			s3c24xx_init_clocks(1693440);
+2，修改MTD分区，将arch/arm/plat-s3c24xx/common-smdk.c line 109开始改为如下
+	[0] = {
+        .name   = "bootloader",
+        .size   = 0x00040000,
+		.offset	= 0,
+	},
+	[1] = {
+        .name   = "params",
+        .offset = MTDPART_OFS_APPEND,
+        .size   = 0x00020000,
+	},
+	[2] = {
+        .name   = "kernel",
+        .offset = MTDPART_OFS_APPEND,
+        .size   = 0x00200000,
+	},
+	[3] = {
+        .name   = "root",
+        .offset = MTDPART_OFS_APPEND,
+        .size   = MTDPART_SIZ_FULL,
+	}
+3，移植YAFFS文件系统
+	（1）将yaffs2代码加入内核，执行命令./patch-ker.sh c /home/wxx213/projects/linux_s3c2440.git/linux-2.6.22.6
+	（2）配置内核，选上对yaffs的支持，执行make s3c2410_defconfig命令之后执行
+4，修改makefile
+	（1）Makefile line 185,186
+		ARCH		?= $(SUBARCH)   改为 	ARCH		?= arm				
+		CROSS_COMPILE	?=			CROSS_COMPILE	?= arm-linux-
+
+	（2）
+	 修改前：415行 config %config: scripts_basic outputmakefile FORCE
+
+         修改后：415 行 %config: scripts_basic outputmakefile FORCE
+        
+         修改前：1443 行 / %/: prepare scripts FORCE
+
+         修改后：1443 行 %/: prepare scripts FORCE
+5，编译
+	make s3c2410_defconfig
+	make menuconfig  选上对yaffs的支持
+	make uImage
+
+
+构建根文件系统
+1，编译安装busybox1.7.0
+	(1)修改根目录Makefile 
+	line 175,176
+		ARCH		?= arm
+		CROSS_COMPILE	?= arm-linux-
+	line 405
+		config %config: scripts_basic outputmakefile FORCE 改为 %config: scripts_basic outputmakefile FORCE
+	line 1242
+		/ %/: prepare scripts FORCE 改为 %/: prepare scripts FORCE
+	(2)配置busybox，make menuconfig	
+	(3)编译busybox，make
+	(4)安装busybox，make CONFIG_PREFIX=/home/wxx213/projects/rootfs_s3c2440.git/fs_mini install
+2，使用glibc库
+	mkdir -p /home/wxx213/projects/rootfs_s3c2440.git/fs_mini/lib
+
+	cd /home/wxx213/projects/rootfs_s3c2440.git/lib
+
+	cp *.so* /home/wxx213/projects/rootfs_s3c2440.git/fs_mini/lib -d
+
+3，构建根文件系统其他目录
+	(1)构建etc目录，在fs_mini下，mkdir etc
+		1>创建/etc/inittab文件
+			#/etc/inittab
+			::sysinit:/etc/init.d/rcS
+         		ttySAC0::askfirst:-/bin/sh
+      			::ctrlaltdel:/sbin/reboot
+         		::shutdown:/bin/umount -a -r
+         		::restart:/sbin/init
+		2>创建/etc/init.d/rcS，创建之后改变模式，chmod -x etc/init.d/rcS 或者chmod 777 etc/init.d/rcS
+			#!/bin/sh
+			ifconfig eth0 192.168.0.120
+			mount -a      			#挂载/etc/fstab文件指定的所有文件系统
+		3>创建/etc/fstab文件
+			#  device    mount-poit    type    options    dump     fsck    order
+			proc          /proc       proc     defaults     0       0          
+			tmpfs         /temp       tmpfs    defaults     0       0
+	(2)构建dev目录，在fs_mini下，mkdir dev
+		cd dev
+		sudo mknod console c 5 1
+		sudo mknod null c 1 3
+		sudo mknod ttySAC0 c 204 64
+		sudo mknod mtdblock0 b 31 0
+		sudo mknod mtdblock1 b 31 1
+		sudo mknod mtdblock2 b 31 2
+	(3)构建其他目录
+		mkdir proc mmt tmp sys root temp
+			
+4，制作yaffs2文件系统映像
+	在yaffs2目录下
+		patch -p2 < /home/wxx213/projects/rootfs_s3c2440.git/yaffs_util_mkyaffsimage.patch
+	在yaffs2/utils目录下
+		make
+		sudo cp mkyaffs2image /usr/local/bin
+		sudo chmod +x /usr/local/bin/mkyaffs2image  (打补丁后的代码编译生成的工具不能用，下面使用外部提供的工具)
+	在rootfs_s3c2440.git目录下
+		mkyaffs2image fs_mini fs_mini.yaffs2
+
+Opengrok 环境搭建：
+	$ sudo apt-get install exuberant-ctags tomcat8
+	下载opengrok编译文件 
+	tar -xvzf opengrok.tar.gz -C /opt
+	cp /opt/opengrok-1.1-rc30/lib/source.war /var/lib/tomcat8/webapps/
+	/opt/opengrok-1.1-rc30/bin/OpenGrok deploy
+	
+	sudo /opt/opengrok-1.1-rc30/bin/OpenGrok index /home/wxx123/projects/linux_kernel/linux-stable  #创建源代码索引
+	
+	

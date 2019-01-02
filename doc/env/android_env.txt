@@ -1,0 +1,75 @@
+
+git clone https://aosp.tuna.tsinghua.edu.cn/kernel/common.git
+
+git clone https://aosp.tuna.tsinghua.edu.cn/kernel/goldfish.git
+
+通过清华大学 TUNA 镜像源下载Android源代码的方法
+
+1.下载 repo 工具:
+	mkdir ~/bin
+	PATH=~/bin:$PATH
+	curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+	chmod a+x ~/bin/repo
+
+2.修改repo中的下载源为清华大学下载源 编辑~/bin/repo，将REPO_URL 一行替换成下面的
+	REPO_URL = 'https://gerrit-google.tuna.tsinghua.edu.cn/git-repo'
+
+3.选择特定的Android版本，如果是Nexus系列，你可以从关于手机中的版本号（build number）中从https://source.android.com/source/build-numbers.html#source-code-tags-and-builds中找到对应的版本。比如我的Nexus 6P具体的版本号是MMB29P,他对应的分支是android-6.0.1_r8
+
+
+
+4.在上一篇文章建立的大小写敏感的文件空间中，执行下面的命令初始化仓库
+	repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-6.0.1_r8
+
+5.同步源码树（以后只需执行这条命令来同步）.终端输入下面命令使用repo开始源代码下载同步，-j4表示并发数为4，清华镜像只支持最大并发数4
+
+	repo sync -j4
+
+
+linux16.04 alias设置别名永久生效
+
+	vim /root/.bashrc
+	写入alias ls='ls --color=tty'
+	source /root/.bashrc
+
+下载openjdk8
+sudo apt-get install openjdk-8-jdk
+
+安装32位的兼容包
+	sudo apt-get install lib32stdc++6
+	sudo apt-get install libc6-i386
+	sudo apt-get install lib32z1 lib32ncurses5
+
+安装依赖包
+	sudo apt-get install m4
+
+
+Jack server install
+	cd android/prebuilts/sdk/tool
+	./jack-admin install-server jack-launcher.jar jack-server-4.11.ALPHA.jar
+	./jack-admin start-server
+
+在文件/prebuilts/sdk/tools/jack-admin中修正-Xmx参数。
+
+
+1、修改变量JACK_SERVER_VM_ARGUMENTS，添加参数 -Xmx2048m
+
+JACK_SERVER_VM_ARGUMENTS="${JACK_SERVER_VM_ARGUMENTS:=-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx4096m}"
+
+然后在prebuilts/sdk/tools/jack-admin下执行
+    	./jack-admin kill-server
+	./jack-admin install-server jack-launcher.jar jack-server-4.11.ALPHA.jar
+    	./jack-admin start-server
+重启jack server
+
+
+编译Android docs
+	make online-sac-docs
+	执行完后，会在/out/target/common/docs/online-sac生成，可供google_appengine解析的文档，如果直接打开是不行的
+	下载google_appengine源码包  google_appengine_1.9.50.zip
+	运行google_appengine查看google原生文档
+	python /home/wxx123/projects/software-pack/google_appengine/dev_appserver.py \			/home/wxx123/projects/android_8_0/out/target/common/docs/online-sac --host 192.168.1.106 --port 8080 &
+	在浏览器输入//192.168.1.106:8080
+
+
+

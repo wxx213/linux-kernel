@@ -1,0 +1,84 @@
+1. build qemu
+# x86
+sudo ./configure --target-list="i386-softmmu x86_64-softmmu"
+sudo make
+
+# arm64
+sudo ./configure --target-list=aarch64-softmmu
+sudo make
+
+2. build kernel
+# x86
+make ARCH=x86 O=out_x86_64 x86_64_defconfig
+make ARCH=x86 O=out_x86_64 menuconfig
+make ARCH=x86 O=out_x86_64 bzImage -j2
+
+# arm64
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out_arm64 defconfig
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out_arm64 menuconfig
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out_arm64 -j2
+
+3. build rootfs
+# x86 busybox
+dd if=/dev/zero of=disks/qemu-root2 bs=1024K count=1000
+mkfs.ext4 disks/qemu-root2
+sudo mount -o loop disks/qemu-root2 mnt/busybox/
+# copy busybox rootfs files #
+sudo umount mnt/busybox
+
+# x86 ubuntu14-trusty
+dd if=/dev/zero of=disks/qemu-root bs=1024K count=1000
+mkfs.ext4 disks/qemu-root
+sudo mount -o loop disks/qemu-root mnt/trusty/
+# dowoload ubuntu14(trusty) minimum rootfs
+sudo debootstrap trusty ubuntu14
+cp -raf ubuntu14/* mnt/trusty/
+sudo umount mnt/trusty
+
+# arm64 busybox
+dd if=/dev/zero of=disks/qemu-root_arm64 bs=1024K count=1000
+mkfs.ext4 disks/qemu-root_arm64
+sudo mount -o loop disks/qemu-root_arm64 mnt/busybox_arm64/
+# copy busybox rootfs files #
+sudo umount mnt/busybox_arm64
+
+4. run qemu
+# by ramdisk
+./qemu-system-x86_64 -smp 2 -m 1024M -kernel /home/wxx123/projects/linux_kernel/linux-stable/out_x86_64/arch/x86_64/boot/bzImage -nographic -append "root=/dev/ram0 rw rootfstype=ext4 console=ttyS0 init=/linuxrc"
+
+# by disk, x86
+./qemu-system-x86_64 -smp 2 -m 1024M -kernel /home/wxx123/projects/linux_kernel/linux-stable/out_x86_64/arch/x86_64/boot/bzImage -nographic -append "root=/dev/sda rootfstype=ext4 console=ttyS0" -hda /home/wxx123/projects/virtual/qemu/rootfs/disks/qemu-root2
+
+# by disk, arm64
+./qemu-system-aarch64 -machine virt -cpu cortex-a53 -machine type=virt -nographic -m 1024 -smp 2 -kernel /home/wxx123/projects/linux_kernel/linux-stable/out_arm64/arch/arm64/boot/Image -append "root=/dev/vda rootfstype=ext4 console=ttyAMA0" -drive file=/home/wxx123/projects/virtual/qemu/rootfs/disks/qemu-root_arm64,if=none,id=blk -device virtio-blk-device,drive=blk
+
+# build rootfs with busybox
+# x86
+make ARCH=x86 defconfig
+make ARCH=x86 menuconfig
+    enable static link
+make ARCH=x86 CONFIG_PREFIX=qemu_rootfs
+make ARCH=x86 CONFIG_PREFIX=qemu_rootfs install
+
+# arm64
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig
+    build static binarary
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CONFIG_PREFIX=qemu_rootfs_arm64
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CONFIG_PREFIX=qemu_rootfs_arm64 install
+
+mkdir dev proc lib
+mkdir etc/init.d
+touch etc/init.d/rcS
+vim etc/init.d/rcS
+    mount -t proc proc /proc
+
+# arm64 copy runtime lib
+sudo cp /usr/aarch64-linux-gnu/lib/*.so* /home/wxx123/projects/virtual/qemu/rootfs/mnt/busybox_arm64/lib/ -d
+
+# x86_64 copy runtime lib
+mkdir lib64
+sudo cp /lib64/ld-linux-x86-64.so.2 /home/wxx123/projects/virtual/qemu/rootfs/mnt/busybox/lib64/ -d
+mkdir lib/x86_64-linux-gnu
+sudo cp /lib/x86_64-linux-gnu/*.so* /home/wxx123/projects/virtual/qemu/rootfs/mnt/busybox/lib/x86_64-linux-gnu/ -d
+

@@ -1,0 +1,15 @@
+# qemu
+sudo apt-get install libsdl1.2-dev, libtool-bin, libglib2.0-dev, libz-dev, and libpixman-1-dev
+sudo ./configure --disable-kvm --target-list="i386-softmmu x86_64-softmmu"  # should be this
+sudo make
+sudo make install
+
+# start JOS with qemu
+cd lab
+make
+
+make qemu
+
+or
+
+make qemu-nox
