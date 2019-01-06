@@ -12,6 +12,7 @@ BUSYBOX_OBJ_DIR := $(OUT_OBJ_DIR)/BUSYBOX_OBJ
 ROOTFS_OBJ_OUT := $(OUT_OBJ_DIR)/rootfs
 ROOTFS_IMAGE := $(ROOTFS_OBJ_OUT)/disks/qemu-root
 VIRTIO_DISK := $(ROOTFS_OBJ_OUT)/disks/qemu-virtio
+SCSI_DISK := $(ROOTFS_OBJ_OUT)/disks/qemu-scsib
 MAKE_EXT4FS := make_ext4fs
 
 QEMU_DIR := $(TOPDIR)/qemu/qemu-2.12.1
@@ -21,11 +22,11 @@ QEMU_IMG_EXE := $(QEMU_DIR)/qemu-img
 
 all: kernel qemu-x rootfs
 	$(QEMU_EXE) -smp 2 -m 1024M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rootfstype=ext4 console=ttyS0" -hda \
-	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio,format=qcow2
+	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio,format=qcow2 -hdb $(SCSI_DISK)
 
 install:
 	$(QEMU_EXE) -smp 2 -m 1024M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rootfstype=ext4 console=ttyS0" -hda \
-	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio,format=qcow2
+	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio,format=qcow2 -hdb $(SCSI_DISK)
 
 kernel: 
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) x86_64_defconfig
@@ -47,6 +48,7 @@ rootfs: busybox
 	$(MAKE_EXT4FS) -l 1024M $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
+	$(QEMU_IMG_EXE) create -f qcow2 $(SCSI_DISK) 512M
 
 # rootfs-mount:
 	# sudo mount -o loop $(ROOTFS_OBJ_OUT)/disks/qemu-root $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
