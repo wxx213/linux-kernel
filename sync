@@ -2,9 +2,14 @@
 
 CURRDIR=`pwd`
 
-echo $CURRDIR
+#
+# kernel version branch, at present it could be:
+#   github : the default linux-3.18.y version branch
+#   kernel-4.14 : the linux-4.14.y version branch
+#
+KERNEL=github
 
-git clone https://github.com/wxx213/kernel-3.18.git $CURRDIR/linux-stable
+git clone https://github.com/wxx213/kernel-3.18.git -b $KERNEL $CURRDIR/linux-stable
 
 git clone https://github.com/wxx213/qemu-2.12.git $CURRDIR/qemu/qemu-2.12.1
 
