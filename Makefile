@@ -25,8 +25,8 @@ all: kernel qemu-x rootfs
 	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio,format=qcow2 -hdb $(SCSI_DISK)
 
 install:
-	$(QEMU_EXE) -smp 2 -m 1024M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rootfstype=ext4 console=ttyS0" -hda \
-	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio,format=qcow2 -hdb $(SCSI_DISK)
+	$(QEMU_EXE) -smp 2 -m 1024M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rootfstype=ext4 console=ttyS0 crashkernel=64M@16M" -hda \
+	$(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=virtio -hdb $(SCSI_DISK)
 
 kernel: 
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) x86_64_defconfig
@@ -47,7 +47,8 @@ rootfs: busybox
 	# dd if=/dev/zero of=$(VIRTIO_DISK) bs=1024K count=1000
 	$(MAKE_EXT4FS) -l 1024M $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
-	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
+	#$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
+	$(MAKE_EXT4FS) -l 1024M $(VIRTIO_DISK)
 	$(QEMU_IMG_EXE) create -f qcow2 $(SCSI_DISK) 512M
 
 # rootfs-mount:

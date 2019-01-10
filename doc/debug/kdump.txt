@@ -1,0 +1,21 @@
+# kernel doc Documention/kdump/kdump.txt
+
+# in x86_64_defconfig
+CONFIG_DEBUG_INFO=Y
+
+# add the command line parameter in normal kernel boot
+crashkernel=64M@16M
+
+# place the kexec tool and bzImage image in qemu rootfs
+# the console=ttyS0 is for print by qemu
+# install the capture kernel into memory
+./kexec -p ./bzImage --append="root=/dev/sda 1 irqpoll maxcpus=1 reset_devices console=ttyS0"
+
+# trigger kernel panic
+echo c > /proc/sysrq-trigger
+
+# after the normal kernel panic and capture kernel startup
+cp /proc/vmcore <dump-file>
+
+# analyze the dump file
+gdb vmlinux <dump-file>
