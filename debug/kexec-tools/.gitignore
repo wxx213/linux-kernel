@@ -1,0 +1,15 @@
+*.o
+*.d
+autom4te.cache/
+bin/
+build/
+config.log
+config.status
+configure
+include/config.h
+include/config.h.in
+libutil.a
+purgatory/purgatory.map
+purgatory/purgatory.ro
+purgatory/purgatory.ro.sym
+Makefile

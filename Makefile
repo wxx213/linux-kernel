@@ -23,6 +23,13 @@ QEMU_OBJ_DIR := $(OUT_OBJ_DIR)/qemu
 QEMU_EXE := $(QEMU_DIR)/x86_64-softmmu/qemu-system-x86_64
 QEMU_IMG_EXE := $(QEMU_DIR)/qemu-img
 
+EXPORT_TOPDIR := $(TOPDIR)
+EXPORT_OUT_DIR := $(OUT_DIR)
+EXPORT_ROOTFS_OUT_DIR := $(ROOTFS_OUT_DIR)
+EXPORT_KERNEL_IMAGE := $(KERNEL_IMAGE)
+
+export EXPORT_TOPDIR EXPORT_OUT_DIR EXPORT_ROOTFS_OUT_DIR EXPORT_KERNEL_IMAGE
+
 all: kernel qemu-x rootfs
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rootfstype=ext4 \
 	 console=ttyS0 crashkernel=64M@16M" -hda \
@@ -50,6 +57,7 @@ rootfs: busybox
 	# sudo cp -r $(BUSYBOX_OUT_DIR)/* $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
 	# sudo umount $(ROOTFS_OBJ_OUT)/mnt/qemu-root
 	# dd if=/dev/zero of=$(VIRTIO_DISK) bs=1024K count=1000
+	make -C $(TOPDIR)/debug
 	$(MAKE_EXT4FS) -l 6G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
