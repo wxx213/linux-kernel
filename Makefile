@@ -63,11 +63,12 @@ rootfs: busybox
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
 	$(MAKE_EXT4FS) -l 4G $(SCSI_DISK)
 
-# rootfs-mount:
-	# sudo mount -o loop $(ROOTFS_OBJ_OUT)/disks/qemu-root $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
+disk-mount:
+	mkdir -p $(OUT_DIR)/disks
+	sudo mount -o loop $(SCSI_DISK) $(OUT_DIR)/disks/
 
-# rootfs-umount:
-	# sudo umount $(ROOTFS_OBJ_OUT)/mnt/qemu-root
+disk-umount:
+	sudo umount $(OUT_DIR)/disks/
 
 qemu-x:
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
