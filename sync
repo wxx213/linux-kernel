@@ -7,7 +7,7 @@ CURRDIR=`pwd`
 #   github : the default linux-3.18.y version branch
 #   kernel-4.14 : the linux-4.14.y version branch
 #
-KERNEL=github
+KERNEL=kernel-4.14
 
 git clone https://github.com/wxx213/kernel-3.18.git -b $KERNEL $CURRDIR/linux-stable
 
