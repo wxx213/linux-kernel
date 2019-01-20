@@ -12,10 +12,13 @@ BUSYBOX_OUT_DIR := $(OUT_DIR)/busybox
 BUSYBOX_OBJ_DIR := $(OUT_OBJ_DIR)/BUSYBOX_OBJ
 
 ROOTFS_OUT_DIR := $(BUSYBOX_OUT_DIR)
+INITRD_OUT_DIR := $(OUT_DIR)/initrd
 
 ROOTFS_IMAGE := $(OUT_DIR)/qemu-root.img
 VIRTIO_DISK := $(OUT_DIR)/qemu-virtio.img
 SCSI_DISK := $(OUT_DIR)/qemu-scsib.img
+INITRD_IMGE := $(OUT_DIR)/initrd.img
+
 MAKE_EXT4FS := make_ext4fs
 
 QEMU_DIR := $(TOPDIR)/qemu/qemu-2.12.1
@@ -49,8 +52,9 @@ kernel:
 
 busybox:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) CONFIG_STATIC=y defconfig
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) CONFIG_STATIC=y CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=rootfs CONFIG_STATIC=y defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=rootfs CONFIG_STATIC=y \
+	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
 
 rootfs: busybox
 	# dd if=/dev/zero of=$(ROOTFS_OBJ_OUT)/disks/qemu-root bs=1024K count=1000
@@ -64,6 +68,13 @@ rootfs: busybox
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
 	$(MAKE_EXT4FS) -l 4G $(SCSI_DISK)
+
+initrd:
+	mkdir -p $(INITRD_OUT_DIR)
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=initrd CONFIG_STATIC=y defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=initrd CONFIG_STATIC=y \
+	CONFIG_PREFIX=$(INITRD_OUT_DIR) install
+	find $(INITRD_OUT_DIR)/ | cpio -o -H newc | gzip > $(INITRD_IMGE)
 
 disk-mount:
 	mkdir -p $(OUT_DIR)/disks
