@@ -9,10 +9,15 @@ crashkernel=64M@16M
 # place the kexec tool and bzImage image in qemu rootfs
 # the console=ttyS0 is for print by qemu
 # install the capture kernel into memory
-/usr/kexec -p /usr/bzImage --initrd=/usr/initrd.img --append="root=/dev/sda 1 irqpoll maxcpus=1 reset_devices console=ttyS0"
+/usr/kexec -p /usr/bzImage --initrd=/usr/initrd.img --append="root=/dev/sda 1 irqpoll maxcpus=1 reset_devices console=ttyS0 hpet=disable"
 
 # trigger kernel panic
 echo c > /proc/sysrq-trigger
+
+# mount relative  filesystem
+mount -t devtmpfs devtmpfs /dev
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
 
 # after the normal kernel panic and capture kernel startup
 cp /proc/vmcore <dump-file>
