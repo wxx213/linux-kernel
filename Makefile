@@ -65,6 +65,7 @@ rootfs: busybox
 	# sudo umount $(ROOTFS_OBJ_OUT)/mnt/qemu-root
 	# dd if=/dev/zero of=$(VIRTIO_DISK) bs=1024K count=1000
 	make -C $(TOPDIR)/debug
+	cp $(INITRD_IMGE) $(BUSYBOX_OUT_DIR)/usr/
 	$(MAKE_EXT4FS) -l 6G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
