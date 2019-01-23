@@ -1,7 +1,7 @@
 # kernel doc Documention/kdump/kdump.txt
 
 # in x86_64_defconfig
-CONFIG_DEBUG_INFO=Y
+CONFIG_DEBUG_INFO=y
 
 # add the command line parameter in normal kernel boot
 crashkernel=64M@16M
@@ -25,3 +25,6 @@ cp /proc/vmcore <dump-file>
 
 # analyze the dump file
 gdb vmlinux <dump-file>
+
+# use gdb maybe won't work normally, so try crash tool
+crash vmlinux <dump-file>
