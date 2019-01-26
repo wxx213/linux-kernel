@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 #define KVM_DEVICE "/dev/kvm"
 #define RAM_SIZE 512000000
