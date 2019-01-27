@@ -72,6 +72,7 @@ rootfs: busybox
 	$(MAKE_EXT4FS) -l 4G $(SCSI_DISK)
 
 initrd:
+	mkdir -p $(BUSYBOX_OBJ_DIR)
 	mkdir -p $(INITRD_OUT_DIR)
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=initrd CONFIG_STATIC=y defconfig
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=initrd CONFIG_STATIC=y \
