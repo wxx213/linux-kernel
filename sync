@@ -28,7 +28,7 @@ echo Entering into `pwd`
 git pull
 cd $CURRDIR
 else
-git clone https://github.com/wxx213/kernel-3.18.git -b $KERNEL_BRANCH $KERNEL_DIR
+git clone https://github.com/wxx213/kernel-stable.git -b $KERNEL_BRANCH $KERNEL_DIR
 fi
 
 if [ -d $QEMU_DIR ]
