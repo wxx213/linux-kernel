@@ -3,4 +3,4 @@ out/*
 qemu/*
 rootfs/*
 linux-stable/
-container/
+container/*
