@@ -25,7 +25,7 @@ int main(int args, char *argv[])
 {
 	printf("程序开始\n");
 	// clone 容器进程
-	int container_pid = clone(container_main, container_stack + STACK_SIZE, SIGCHLD | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWPID, NULL);
+	int container_pid = clone(container_main, container_stack + STACK_SIZE, SIGCHLD | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | CLONE_NEWUSER, NULL);
    
 	if(container_pid < 0) {
 		perror("clone failed");
