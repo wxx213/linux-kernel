@@ -1,0 +1,62 @@
+#!/bin/sh
+
+CURRDIR=`pwd`
+KERNEL_DIR=$CURRDIR/linux-stable
+#
+# kernel version branch, at present it could be:
+#   github : the default linux-3.18.y version branch
+#   kernel-4.14 : the linux-4.14.y version branch
+#
+KERNEL_BRANCH=kernel-4.14
+
+QEMU_DIR=$CURRDIR/qemu/qemu-2.12.1
+QEMU_BRANCH=master
+
+ROOTFS_DIR=$CURRDIR/rootfs/busybox
+ROOTFS_BRANCH=github
+
+CONTAINER_DIR=$CURRDIR/container/lxc
+CONTAINER_BRANCH=master
+
+# sync current git
+git pull
+
+if [ -d $KERNEL_DIR ]
+then
+cd $KERNEL_DIR
+echo Entering into `pwd`
+git pull
+cd $CURRDIR
+else
+git clone https://gitee.com/wxx213/kernel-stable.git -b $KERNEL_BRANCH $KERNEL_DIR
+fi
+
+if [ -d $QEMU_DIR ]
+then
+cd $QEMU_DIR
+echo Entering into `pwd`
+git pull
+cd $CURRDIR
+else
+git clone https://gitee.com/wxx213/qemu-2.12.git -b $QEMU_BRANCH $QEMU_DIR
+fi
+
+if [ -d $ROOTFS_DIR ]
+then
+cd $ROOTFS_DIR
+echo Entering into `pwd`
+git pull
+cd $CURRDIR
+else
+git clone https://gitee.com/wxx213/busybox_rootfs.git -b $ROOTFS_BRANCH $ROOTFS_DIR
+fi
+
+if [ -d $CONTAINER_DIR ]
+then
+cd $CONTAINER_DIR
+echo Entering into `pwd`
+git pull
+cd $CURRDIR
+else
+git clone https://gitee.com/wxx213/container.git -b $CONTAINER_BRANCH $CONTAINER_DIR
+fi
