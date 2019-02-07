@@ -26,6 +26,10 @@ QEMU_OBJ_DIR := $(OUT_OBJ_DIR)/qemu
 QEMU_EXE := $(QEMU_DIR)/x86_64-softmmu/qemu-system-x86_64
 QEMU_IMG_EXE := $(QEMU_DIR)/qemu-img
 
+KVMSAMPLE_OBJ_DIR := $(OUT_OBJ_DIR)/kvmsample
+KVMSAMPLE_DIR := $(TOPDIR)/doc/qemu/kvm/sample
+KVMSAMPLE_BIN_DIR := $(ROOTFS_OUT_DIR)/usr
+
 EXPORT_TOPDIR := $(TOPDIR)
 EXPORT_OUT_DIR := $(OUT_DIR)
 EXPORT_ROOTFS_OUT_DIR := $(ROOTFS_OUT_DIR)
@@ -89,6 +93,12 @@ disk-umount:
 qemu-x:
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
 	cd $(QEMU_DIR) && make
+
+kvmsample:
+	make -C $(KVMSAMPLE_DIR) O=$(KVMSAMPLE_OBJ_DIR)
+	mkdir -p $(KVMSAMPLE_BIN_DIR)
+	cp $(KVMSAMPLE_OBJ_DIR)/kvmsample $(KVMSAMPLE_BIN_DIR)/
+	cp $(KVMSAMPLE_OBJ_DIR)/test.bin $(KVMSAMPLE_BIN_DIR)/
 
 clean:
 	rm -rf $(OUT_DIR)
