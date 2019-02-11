@@ -9,9 +9,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/mount.h>
+#include <signal.h>
 
 #define STACK_SIZE (1024 * 1024)
-#define PATH_MAX_LEN 20
+#define PATH_MAX_LEN 30
+#define UID_MAP "0 1000 1"
+#define GID_MAP "0 1000 1"
 
 static char container_stack[STACK_SIZE];
 char* const container_args[] = {
@@ -30,7 +34,7 @@ int container_main(void *args)
 	// delay to wait for setting /proc/$pid/uid_map and /proc/$pid/gid_map
 	// complete by parent process
 	sleep(1);
-
+	printf("current pid is %d\n", getpid());
 	ret = setuid(0);
 	if(ret < 0) {
 		perror("setuid failed");
@@ -42,6 +46,12 @@ int container_main(void *args)
 		exit(1);
 	}
 	printf("setuid setgid finished\n");
+
+	ret = mount("proc", "/proc", "proc", 0, NULL);
+	if(ret < 0) {
+		perror("mount proc failed");
+		exit(1);
+	}
 	execv(container_args[0], container_args); // 执行/bin/bash   return 1;
 }
 
@@ -56,6 +66,8 @@ int main(int args, char *argv[])
 	int container_pid = clone(container_main, container_stack + STACK_SIZE, SIGCHLD
 		| CLONE_NEWUTS
 		| CLONE_NEWUSER
+		| CLONE_NEWPID
+		| CLONE_NEWNS
 		/* | CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | CLONE_NEWUSER */ , NULL);
    
 	if(container_pid < 0) {
@@ -68,12 +80,32 @@ int main(int args, char *argv[])
 	fd = open(path, O_RDWR);
 	if(fd < 0) {
 		perror("open /proc/pid/uid_map failed");
+		kill(pid, SIGKILL);
 		exit(1);
 	}
-	ret = write(fd, "0          0 4294967295\n", strlen("0          0 4294967295\n"));
+	ret = write(fd, UID_MAP, strlen(UID_MAP));
 	if(ret < 0) {
 		perror("write /proc/pid/uid_map failed");
 		close(fd);
+		kill(pid, SIGKILL);
+		exit(1);
+	}
+	close(fd);
+
+	snprintf(path, PATH_MAX_LEN, "/proc/%d/setgroups", pid);
+	fd = open(path, O_RDWR);
+	if(fd < 0) {
+		perror("open /proc/pid/setgroups failed");
+		printf("open /proc/%d/setgroups error\n", pid);
+		while(1);
+		kill(pid, SIGKILL);
+		exit(1);
+	}
+	ret = write(fd, "deny", strlen("deny"));
+	if(ret < 0) {
+		perror("write /proc/pid/setgroups failed");
+		close(fd);
+		kill(pid, SIGKILL);
 		exit(1);
 	}
 	close(fd);
@@ -82,12 +114,14 @@ int main(int args, char *argv[])
 	fd = open(path, O_RDWR);
 	if(fd < 0) {
 		perror("open /proc/pid/gid_map failed");
+		kill(pid, SIGKILL);
 		exit(1);
 	}
-	ret = write(fd, "0          0 4294967295\n", strlen("0          0 4294967295\n"));
+	ret = write(fd, GID_MAP, strlen(GID_MAP));
 	if(ret < 0) {
 		perror("write /proc/pid/gid_map failed");
 		close(fd);
+		kill(pid, SIGKILL);
 		exit(1);
 	}
 	close(fd);
