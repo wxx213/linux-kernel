@@ -1,4 +1,6 @@
-
+ifeq ($(O), )
+O := .
+endif
 $(shell mkdir -p $(O))
 
 all: kvmsample test.bin
@@ -13,4 +15,4 @@ test.o: test.S
 	as -32 test.S -o $(O)/test.o
 
 clean:
-	rm $(O)/main.o $(O)/test.o $(O)/kvmsample $(O)/test.bin
+	rm  $(O)/test.o $(O)/kvmsample $(O)/test.bin
