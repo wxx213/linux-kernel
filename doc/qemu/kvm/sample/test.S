@@ -1,11 +1,11 @@
 # A test code for kvmsample
 
 .globl _start
-    .code16
+    .code32
 _start:
-    xorw %ax, %ax
+    xorl %eax, %eax
     
 loop1:
-    out %ax, $0x10
-    inc %ax
+    out %eax, $0x10
+    inc %eax
     jmp loop1
