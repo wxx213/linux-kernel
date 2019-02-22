@@ -5,7 +5,7 @@ $(shell mkdir -p $(O))
 
 all: kvmsample test.bin
 
-kvmsample:
+kvmsample: main.c
 	gcc main.c -o $(O)/kvmsample -lpthread
 
 test.bin: test.o
