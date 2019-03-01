@@ -30,6 +30,8 @@ KVMSAMPLE_OBJ_DIR := $(OUT_OBJ_DIR)/kvmsample
 KVMSAMPLE_DIR := $(TOPDIR)/doc/qemu/kvm/sample
 KVMSAMPLE_BIN_DIR := $(ROOTFS_OUT_DIR)/usr
 
+NESTED_KVM_DIR := $(OUT_DIR)/nested_kvm_test
+
 EXPORT_TOPDIR := $(TOPDIR)
 EXPORT_OUT_DIR := $(OUT_DIR)
 EXPORT_ROOTFS_OUT_DIR := $(ROOTFS_OUT_DIR)
@@ -73,7 +75,6 @@ rootfs: busybox
 	$(MAKE_EXT4FS) -l 6G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
-	$(MAKE_EXT4FS) -l 4G $(SCSI_DISK)
 
 initrd:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
@@ -99,6 +100,18 @@ kvmsample:
 	mkdir -p $(KVMSAMPLE_BIN_DIR)
 	cp $(KVMSAMPLE_OBJ_DIR)/kvmsample $(KVMSAMPLE_BIN_DIR)/
 	cp $(KVMSAMPLE_OBJ_DIR)/test.bin $(KVMSAMPLE_BIN_DIR)/
+
+nested-kvm:
+	mkdir -p $(NESTED_KVM_DIR)
+	cp $(QEMU_EXE) $(NESTED_KVM_DIR)/
+	cp $(QEMU_DIR)/pc-bios/linuxboot_dma.bin $(NESTED_KVM_DIR)/
+	cp $(QEMU_DIR)/pc-bios/bios-256k.bin $(NESTED_KVM_DIR)/
+	cp $(QEMU_DIR)/pc-bios/kvmvapic.bin $(NESTED_KVM_DIR)/
+	cp $(QEMU_DIR)/pc-bios/vgabios-stdvga.bin $(NESTED_KVM_DIR)/
+	cp $(KERNEL_IMAGE) $(NESTED_KVM_DIR)/
+	cp $(QEMU_DIR)/pc-bios/efi-e1000.rom $(NESTED_KVM_DIR)/
+	$(MAKE_EXT4FS) -l 2G $(NESTED_KVM_DIR)/qemu-root.img $(BUSYBOX_OUT_DIR)
+	$(MAKE_EXT4FS) -l 4G $(SCSI_DISK) $(NESTED_KVM_DIR)
 
 clean:
 	rm -rf $(OUT_DIR)
