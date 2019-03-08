@@ -65,7 +65,7 @@ busybox:
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=rootfs CONFIG_STATIC=y \
 	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
 
-rootfs: busybox
+rootfs: busybox nested-kvm
 	# dd if=/dev/zero of=$(ROOTFS_OBJ_OUT)/disks/qemu-root bs=1024K count=1000
 	#  mkfs.ext4 $(ROOTFS_OBJ_OUT)/disks/qemu-root
 	# sudo mount -o loop $(ROOTFS_OBJ_OUT)/disks/qemu-root $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
