@@ -1,0 +1,22 @@
+# network config
+# create a net bridge, here it is br0
+cd /etc/network
+sudo cp interfaces interfaces.bak # backup
+sudo vim interfaces
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo br0
+iface lo inet loopback
+
+iface eth0 inet manual
+
+iface br0 inet dhcp
+    bridge_ports eth0
+
+# the eth0 is the network interface of the host,
+# it must be matched with the real interface of host
