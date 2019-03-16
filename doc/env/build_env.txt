@@ -1,5 +1,14 @@
-# network config
+# the packages need to installed
+openssh-server # make ssh available
+git make gcc
+libelf-dev bc # for kernel
+python pkg-config zlib1g-dev libglib2.0-dev libpixman-1-dev # for qemu
+android-tools-fsutils # for rootfs
+autoconf # for kexec_tool
+
+# network config for qemu vm
 # create a net bridge, here it is br0
+sudo apt install bridge-utils
 cd /etc/network
 sudo cp interfaces interfaces.bak # backup
 sudo vim interfaces
@@ -20,3 +29,9 @@ iface br0 inet dhcp
 
 # the eth0 is the network interface of the host,
 # it must be matched with the real interface of host
+
+# when use qemu-bridge-helper
+sudo mkdir -p /usr/local/etc/qemu/
+sudo touch /usr/local/etc/qemu/bridge.conf
+sudo vim /usr/local/etc/qemu/bridge.conf
+    allow br0
