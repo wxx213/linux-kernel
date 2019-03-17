@@ -123,3 +123,4 @@ clean:
 	rm -rf $(OUT_DIR)
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
 	cd $(QEMU_DIR) && make distclean
+	make clean -C $(TOPDIR)/debug
