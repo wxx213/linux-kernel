@@ -124,3 +124,15 @@ clean:
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
 	cd $(QEMU_DIR) && make distclean
 	make clean -C $(TOPDIR)/debug
+
+help:
+	@echo "make/make all       - build all and start qemu with the build kernel and rootfs"
+	@echo "make install        - only start qemu with the build kernel and rootfs"
+	@echo "make kernel         - build kernel"
+	@echo "make rootfs         - build rootfs"
+	@echo "make initrd         - build initrd"
+	@echo "make qemu-x         - build qemu"
+	@echo "make kvmsample      - build kvm sample codes"
+	@echo "make nested-kvm     - build nested kvm test codes"
+	@echo "make clean          - clean all the builds"
+	@echo "for more help information, see doc/env/build_env.txt"
