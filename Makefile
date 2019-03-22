@@ -45,8 +45,9 @@ all: kernel qemu-x initrd rootfs
 	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
 	disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
-	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=wxx -enable-kvm -cpu qemu64,svm=on,npt=on \
-	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_wxx/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_wxx/etc/qemu-ifdown \
+	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust -enable-kvm -cpu qemu64,svm=on,npt=on \
+	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
+	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
 	# -device e1000,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 install:
@@ -54,8 +55,9 @@ install:
 	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
 	disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
-	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=wxx -enable-kvm -cpu qemu64,svm=on,npt=on \
-	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_wxx/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_wxx/etc/qemu-ifdown \
+	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust -enable-kvm -cpu qemu64,svm=on,npt=on \
+	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
+	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
 	# -device e1000,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 kernel: 
@@ -65,8 +67,8 @@ kernel:
 
 busybox:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=rootfs CONFIG_STATIC=y defconfig
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=rootfs CONFIG_STATIC=y \
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y \
 	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
 
 rootfs: busybox nested-kvm
@@ -85,8 +87,8 @@ rootfs: busybox nested-kvm
 initrd:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
 	mkdir -p $(INITRD_OUT_DIR)
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=initrd CONFIG_STATIC=y defconfig
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_WXX_TARGET=initrd CONFIG_STATIC=y \
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=initrd CONFIG_STATIC=y defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=initrd CONFIG_STATIC=y \
 	CONFIG_PREFIX=$(INITRD_OUT_DIR) install
 	(cd $(INITRD_OUT_DIR); find . | cpio -o -H newc | gzip) > $(INITRD_IMGE)
 
