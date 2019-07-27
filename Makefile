@@ -48,7 +48,7 @@ all: kernel qemu-x initrd rootfs
 	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust -enable-kvm -cpu qemu64,svm=on,npt=on \
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
 	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
-	# -device e1000,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 install:
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rw rootfstype=ext4 \
@@ -58,7 +58,7 @@ install:
 	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust -enable-kvm -cpu qemu64,svm=on,npt=on \
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
 	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
-	# -device e1000,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 kernel: 
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) x86_64_defconfig
