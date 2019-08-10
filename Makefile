@@ -109,6 +109,14 @@ kvmsample:
 	cp $(KVMSAMPLE_OBJ_DIR)/kvmsample $(KVMSAMPLE_BIN_DIR)/
 	cp $(KVMSAMPLE_OBJ_DIR)/test.bin $(KVMSAMPLE_BIN_DIR)/
 
+container_sample:
+	rm -rf $(OUT_DIR)/container_sample
+	mkdir -p $(OUT_DIR)/container_sample
+	gcc $(TOPDIR)/doc/container/sample/main.c -o  $(OUT_DIR)/container_sample/create_container
+	cp -r $(ROOTFS_OUT_DIR) $(OUT_DIR)/container_sample/busybox
+	mkdir -p $(OUT_DIR)/container_sample/root
+	cd $(OUT_DIR)/container_sample && ./create_container
+
 nested-kvm:
 	mkdir -p $(NESTED_KVM_DIR)
 	cp $(QEMU_EXE) $(NESTED_KVM_DIR)/
