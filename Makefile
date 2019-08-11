@@ -109,12 +109,18 @@ kvmsample:
 	cp $(KVMSAMPLE_OBJ_DIR)/kvmsample $(KVMSAMPLE_BIN_DIR)/
 	cp $(KVMSAMPLE_OBJ_DIR)/test.bin $(KVMSAMPLE_BIN_DIR)/
 
-container_sample:
-	rm -rf $(OUT_DIR)/container_sample
-	mkdir -p $(OUT_DIR)/container_sample
-	gcc $(TOPDIR)/doc/container/sample/main.c -o  $(OUT_DIR)/container_sample/create_container
-	cp -r $(ROOTFS_OUT_DIR) $(OUT_DIR)/container_sample/busybox
+container_rootfs:
+	mkdir -p $(BUSYBOX_OBJ_DIR)
+	mkdir -p $(OUT_DIR)/container_sample/busybox
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=container_rootfs \
+	CONFIG_STATIC=y CONTAINER_ROOTFS_OUT_DIR=$(OUT_DIR)/container_sample/busybox defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=container_rootfs \
+	CONFIG_STATIC=y CONFIG_PREFIX=$(OUT_DIR)/container_sample/busybox \
+	CONTAINER_ROOTFS_OUT_DIR=$(OUT_DIR)/container_sample/busybox install
 	mkdir -p $(OUT_DIR)/container_sample/root
+
+container_sample:
+	gcc $(TOPDIR)/doc/container/sample/main.c -o  $(OUT_DIR)/container_sample/create_container
 	cd $(OUT_DIR)/container_sample && ./create_container
 
 nested-kvm:
