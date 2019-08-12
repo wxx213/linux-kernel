@@ -73,37 +73,37 @@ int container_main(void *args)
 		perror("mount /dev failed");
 		exit(1);
 	}
-	ret = mknod("/dev/console", 0x777, 0x08800002);
+	ret = mknod("/dev/console", 0x777, makedev(5, 1));
 	if(ret < 0) {
 		perror("mknod console failed");
 		exit(1);
 	}
-	ret = mknod("/dev/tty", 0x777, 0x00500000);
+	ret = mknod("/dev/tty", 0x777, makedev(5, 0));
 	if(ret < 0) {
 		perror("mknod tty failed");
 		exit(1);
 	}
-	ret = mknod("/dev/tty1", 0x777, 0x08800000);
+	ret = mknod("/dev/tty1", 0x777, makedev(4, 1));
 	if(ret < 0) {
 		perror("mknod tty1 failed");
 		exit(1);
 	}
-	ret = mknod("/dev/tty2", 0x777, 0x08800001);
+	ret = mknod("/dev/tty2", 0x777, makedev(4, 2));
 	if(ret < 0) {
 		perror("mknod tty2 failed");
 		exit(1);
 	}
-	ret = mknod("/dev/tty3", 0x777, 0x08800002);
+	ret = mknod("/dev/tty3", 0x777, makedev(4, 3));
 	if(ret < 0) {
 		perror("mknod tty3 failed");
 		exit(1);
 	}
-	ret = mknod("/dev/tty4", 0x777, 0x08800003);
+	ret = mknod("/dev/tty4", 0x777, makedev(4, 4));
 	if(ret < 0) {
 		perror("mknod tty4 failed");
 		exit(1);
 	}
-	ret = mknod("/dev/null", 0x777, 0x00100003);
+	ret = mknod("/dev/null", 0x777, makedev(1, 3));
 	if(ret < 0) {
 		perror("mknod null failed");
 		exit(1);
@@ -133,7 +133,9 @@ int main(int args, char *argv[])
 		| CLONE_NEWUSER
 		| CLONE_NEWPID
 		| CLONE_NEWNS
-		/* | CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | CLONE_NEWUSER */ , NULL);
+		| CLONE_NEWIPC
+		| CLONE_NEWNET
+		, NULL);
    
 	if(container_pid < 0) {
 		perror("clone failed");
