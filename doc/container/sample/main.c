@@ -19,11 +19,12 @@
 
 static char container_stack[STACK_SIZE];
 char* const container_args[] = {
-	"/sbin/init",
+	// "/sbin/init",
+	"/bin/sh",
 	NULL
 };
 
-// 容器进程运行的程序主函数
+// the container process
 int container_main(void *args)
 {
 	int ret;
@@ -110,14 +111,19 @@ int container_main(void *args)
 	}
 #endif
 
-#if 0
 	ret = mount("proc", "/proc", "proc", 0, NULL);
 	if(ret < 0) {
 		perror("mount proc failed");
 		exit(1);
 	}
-#endif
-	execv(container_args[0], container_args); // 执行/bin/bash   return 1;
+
+	ret = mount("sysfs", "/sys", "sysfs", 0, NULL);
+	if(ret < 0) {
+		perror("mount sysfs failed");
+		exit(1);
+	}
+
+	execv(container_args[0], container_args);
 }
 
 int main(int args, char *argv[])
