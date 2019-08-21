@@ -55,152 +55,131 @@ static int prepare_root()
 	}
 	return 0;
 }
-// the container process
-int container_main(void *args)
+
+static int set_as_root()
 {
 	int ret;
 
-	printf("在容器进程中！\n");
-	sethostname("container", 9);
-
-	// delay to wait for setting /proc/$pid/uid_map and /proc/$pid/gid_map
-	// complete by parent process
-	sleep(1);
 	printf("current pid is %d\n", getpid());
 	ret = setuid(0);
 	if(ret < 0) {
 		perror("setuid failed");
-		exit(1);
+		return 1;
 	}
 	ret = setgid(0);
 	if(ret < 0) {
 		perror("setgid failed");
-		exit(1);
+		return 1;
 	}
 	printf("setuid setgid finished\n");
+	return 0;
+}
 
-#if 1
-#if 0
-	ret = mount("busybox", "root", 0, MS_BIND, NULL);
-	if(ret < 0) {
-		perror("mount bind failed");
-		exit(1);
-	}
-#endif
+static int switch_to_rootfs()
+{
+	int ret;
+
 	ret = chdir("container_rootfs");
 	if(ret < 0) {
 		perror("chdir container_rootfs failed");
-		exit(1);
+		return 1;
 	}
 	ret = chroot(".");
 	if(ret < 0) {
 		perror("chroot . failed");
-		exit(1);
+		return 1;
 	}
 	ret = chdir("/");
 	if(ret < 0) {
 		perror("chdir / failed");
-		exit(1);
+		return 1;
 	}
+	return 0;
+}
+
+static int prepare_devfs()
+{
+	int ret;
+
 	ret = mount("none", "/dev", "tmpfs", 0, NULL);
 	if(ret < 0) {
 		perror("mount /dev failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/console", 0x777, makedev(5, 1));
 	if(ret < 0) {
 		perror("mknod console failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/tty", 0x777, makedev(5, 0));
 	if(ret < 0) {
 		perror("mknod tty failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/tty1", 0x777, makedev(4, 1));
 	if(ret < 0) {
 		perror("mknod tty1 failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/tty2", 0x777, makedev(4, 2));
 	if(ret < 0) {
 		perror("mknod tty2 failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/tty3", 0x777, makedev(4, 3));
 	if(ret < 0) {
 		perror("mknod tty3 failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/tty4", 0x777, makedev(4, 4));
 	if(ret < 0) {
 		perror("mknod tty4 failed");
-		exit(1);
+		return 1;
 	}
 	ret = mknod("/dev/null", 0x777, makedev(1, 3));
 	if(ret < 0) {
 		perror("mknod null failed");
-		exit(1);
+		return 1;
 	}
-#endif
+	return 0;
+}
+
+static int  prepare_proc_sysfs()
+{
+	int ret;
 
 	ret = mount("proc", "/proc", "proc", 0, NULL);
 	if(ret < 0) {
 		perror("mount proc failed");
-		exit(1);
+		return 1;
 	}
 
 	ret = mount("sysfs", "/sys", "sysfs", 0, NULL);
 	if(ret < 0) {
 		perror("mount sysfs failed");
-		exit(1);
+		return 1;
 	}
-
-	execv(container_args[0], container_args);
+	return 0;
 }
 
-int main(int args, char *argv[])
+static int setup_gid_pid(pid_t pid)
 {
-	int ret, fd;
-	pid_t pid;
+	int fd, ret;
 	char path[PATH_MAX_LEN];
 
-	printf("程序开始\n");
-
-	ret = prepare_root();
-	if(ret) {
-		perror("prepare_root failed");
-		return 1;
-	}
-	// clone 容器进程
-	int container_pid = clone(container_main, container_stack + STACK_SIZE, SIGCHLD
-		| CLONE_NEWUTS
-		| CLONE_NEWUSER
-		| CLONE_NEWPID
-		| CLONE_NEWNS
-		| CLONE_NEWIPC
-		| CLONE_NEWNET
-		, NULL);
-   
-	if(container_pid < 0) {
-		perror("clone failed");
-		return 1;
-	}
-
-	pid = container_pid;
 	snprintf(path, PATH_MAX_LEN, "/proc/%d/uid_map", pid);
 	fd = open(path, O_RDWR);
 	if(fd < 0) {
 		perror("open /proc/pid/uid_map failed");
 		kill(pid, SIGKILL);
-		exit(1);
+		return 1;
 	}
 	ret = write(fd, UID_MAP, strlen(UID_MAP));
 	if(ret < 0) {
 		perror("write /proc/pid/uid_map failed");
 		close(fd);
 		kill(pid, SIGKILL);
-		exit(1);
+		return 1;
 	}
 	close(fd);
 
@@ -211,14 +190,14 @@ int main(int args, char *argv[])
 		printf("open /proc/%d/setgroups error\n", pid);
 		while(1);
 		kill(pid, SIGKILL);
-		exit(1);
+		return 1;
 	}
 	ret = write(fd, "deny", strlen("deny"));
 	if(ret < 0) {
 		perror("write /proc/pid/setgroups failed");
 		close(fd);
 		kill(pid, SIGKILL);
-		exit(1);
+		return 1;
 	}
 	close(fd);
 
@@ -227,19 +206,95 @@ int main(int args, char *argv[])
 	if(fd < 0) {
 		perror("open /proc/pid/gid_map failed");
 		kill(pid, SIGKILL);
-		exit(1);
+		return 1;
 	}
 	ret = write(fd, GID_MAP, strlen(GID_MAP));
 	if(ret < 0) {
 		perror("write /proc/pid/gid_map failed");
 		close(fd);
 		kill(pid, SIGKILL);
-		exit(1);
+		return 1;
 	}
 	close(fd);
 	printf("set uid_map gid_map finished\n");
+	return 0;
+}
 
-	// 等待容器进程结束
+// the container process
+int container_main(void *args)
+{
+	int ret;
+
+	printf("In container process\n");
+	sethostname("container", 9);
+
+	// delay to wait for setting /proc/$pid/uid_map and /proc/$pid/gid_map
+	// complete by parent process
+	sleep(1);
+	ret = set_as_root();
+	if(ret) {
+		perror("set_as_root error");
+		exit(1);
+	}
+#if 0
+	ret = mount("busybox", "root", 0, MS_BIND, NULL);
+	if(ret < 0) {
+		perror("mount bind failed");
+		exit(1);
+	}
+#endif
+	ret = switch_to_rootfs();
+	if(ret) {
+		perror("switch_to_rootfs error");
+		exit(1);
+	}
+
+	ret = prepare_devfs();
+	if(ret) {
+		perror("prepare_devfs error");
+		exit(1);
+	}
+
+	ret = prepare_proc_sysfs();
+	if(ret) {
+		perror("prepare_proc_sysfs error");
+		exit(1);
+	}
+	execv(container_args[0], container_args);
+}
+
+int main(int args, char *argv[])
+{
+	int ret;
+
+	printf("Program start\n");
+
+	ret = prepare_root();
+	if(ret) {
+		perror("prepare_root failed");
+		return 1;
+	}
+	// clone container process
+	int container_pid = clone(container_main, container_stack + STACK_SIZE, SIGCHLD
+		| CLONE_NEWUTS
+		| CLONE_NEWUSER
+		| CLONE_NEWPID
+		| CLONE_NEWNS
+		| CLONE_NEWIPC
+		| CLONE_NEWNET
+		, NULL);
+
+	if(container_pid < 0) {
+		perror("clone failed");
+		return 1;
+	}
+
+	ret = setup_gid_pid(container_pid);
+	if(ret) {
+		perror("setup_gid_pid error");
+		exit(1);
+	}
+	// wait for container process end
 	waitpid(container_pid, NULL, 0);
 	return 0;
 }
