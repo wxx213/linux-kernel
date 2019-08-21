@@ -24,6 +24,37 @@ char* const container_args[] = {
 	NULL
 };
 
+static int prepare_root()
+{
+	int ret;
+
+	ret = system("dd if=/dev/zero of=container_root bs=1024K count=1000");
+	if(ret) {
+		perror("dd if=/dev/zero of=container_root bs=1024K count=1000 error");
+		return ret;
+	}
+	ret = system("mkfs.ext4 container_root");
+	if(ret) {
+		perror("mkfs.ext4 container_root error");
+		return ret;
+	}
+	ret = system("mkdir -p container_rootfs");
+	if(ret) {
+		perror("mkdir container_rootfs error");
+		return ret;
+	}
+	ret = system("mount -o loop container_root container_rootfs/");
+	if(ret) {
+		perror("mount container_root container_rootfs/ error");
+		return ret;
+	}
+	ret = system("cp -r busybox/* container_rootfs/");
+	if(ret) {
+		perror("cp -r busybox/* container_rootfs/ error");
+		return ret;
+	}
+	return 0;
+}
 // the container process
 int container_main(void *args)
 {
@@ -49,14 +80,16 @@ int container_main(void *args)
 	printf("setuid setgid finished\n");
 
 #if 1
+#if 0
 	ret = mount("busybox", "root", 0, MS_BIND, NULL);
 	if(ret < 0) {
 		perror("mount bind failed");
 		exit(1);
 	}
-	ret = chdir("root");
+#endif
+	ret = chdir("container_rootfs");
 	if(ret < 0) {
-		perror("chdir root failed");
+		perror("chdir container_rootfs failed");
 		exit(1);
 	}
 	ret = chroot(".");
@@ -133,6 +166,12 @@ int main(int args, char *argv[])
 	char path[PATH_MAX_LEN];
 
 	printf("程序开始\n");
+
+	ret = prepare_root();
+	if(ret) {
+		perror("prepare_root failed");
+		return 1;
+	}
 	// clone 容器进程
 	int container_pid = clone(container_main, container_stack + STACK_SIZE, SIGCHLD
 		| CLONE_NEWUTS
