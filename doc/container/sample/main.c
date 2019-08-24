@@ -56,6 +56,18 @@ static int prepare_root()
 	return 0;
 }
 
+static int cleanup_root()
+{
+	int ret;
+
+	ret = system("umount container_rootfs");
+	if(ret) {
+		perror("umount container_rootfs error");
+		return ret;
+	}
+	return 0;
+}
+
 static int set_as_root()
 {
 	int ret;
@@ -296,5 +308,6 @@ int main(int args, char *argv[])
 	}
 	// wait for container process end
 	waitpid(container_pid, NULL, 0);
+	cleanup_root();
 	return 0;
 }
