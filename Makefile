@@ -42,20 +42,24 @@ export EXPORT_TOPDIR EXPORT_OUT_DIR EXPORT_ROOTFS_OUT_DIR EXPORT_KERNEL_IMAGE EX
 
 all: kernel qemu-x initrd rootfs
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rw rootfstype=ext4 \
-	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
-	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
-	disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
-	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust -enable-kvm -cpu qemu64,svm=on,npt=on \
+	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) \
+	-enable-kvm -cpu qemu64,svm=on,npt=on \
+	# -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
+	# -device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
+	# disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
+	# -device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
 	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
 	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 install:
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rw rootfstype=ext4 \
-	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
-	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
-	disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
-	-device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust -enable-kvm -cpu qemu64,svm=on,npt=on \
+	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) \
+	-enable-kvm -cpu qemu64,svm=on,npt=on \
+	# -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
+	# -device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
+	# disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
+	# -device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust \
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
 	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
 	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
@@ -71,7 +75,7 @@ busybox:
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y \
 	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
 
-rootfs: busybox nested-kvm
+rootfs: busybox
 	# dd if=/dev/zero of=$(ROOTFS_OBJ_OUT)/disks/qemu-root bs=1024K count=1000
 	#  mkfs.ext4 $(ROOTFS_OBJ_OUT)/disks/qemu-root
 	# sudo mount -o loop $(ROOTFS_OBJ_OUT)/disks/qemu-root $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
@@ -80,9 +84,9 @@ rootfs: busybox nested-kvm
 	# dd if=/dev/zero of=$(VIRTIO_DISK) bs=1024K count=1000
 	make -C $(TOPDIR)/debug
 	cp $(INITRD_IMGE) $(BUSYBOX_OUT_DIR)/usr/
-	$(MAKE_EXT4FS) -l 6G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
+	$(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
-	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
+	# $(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
 
 initrd:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
@@ -94,7 +98,7 @@ initrd:
 
 disk-mount:
 	mkdir -p $(OUT_DIR)/disks
-	sudo mount -o loop $(SCSI_DISK) $(OUT_DIR)/disks/
+	sudo mount -o loop $(ROOTFS_IMAGE) $(OUT_DIR)/disks/
 
 disk-umount:
 	sudo umount $(OUT_DIR)/disks/

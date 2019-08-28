@@ -7,8 +7,9 @@ kexec_tool:
 	cd $(KEXEC_TOOL_DIR) && ./bootstrap
 	cd $(KEXEC_TOOL_DIR) && ./configure
 	cd $(KEXEC_TOOL_DIR) && make
-	cp $(KEXEC_TOOL_DIR)/build/sbin/kexec $(EXPORT_ROOTFS_OUT_DIR)/usr/
-	cp $(EXPORT_KERNEL_IMAGE) $(EXPORT_ROOTFS_OUT_DIR)/usr/
+	mkdir -p $(EXPORT_ROOTFS_OUT_DIR)/usr/bin $(EXPORT_ROOTFS_OUT_DIR)/usr/local
+	cp $(KEXEC_TOOL_DIR)/build/sbin/kexec $(EXPORT_ROOTFS_OUT_DIR)/usr/bin
+	cp $(EXPORT_KERNEL_IMAGE) $(EXPORT_ROOTFS_OUT_DIR)/usr/local
 
 clean:
 	cd $(KEXEC_TOOL_DIR) && ./bootstrap
