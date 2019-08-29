@@ -32,6 +32,13 @@ KVMSAMPLE_BIN_DIR := $(ROOTFS_OUT_DIR)/usr
 
 NESTED_KVM_DIR := $(OUT_DIR)/nested_kvm_test
 
+KVM_DEVICE = $(shell ls /dev/kvm)
+ifneq ($(KVM_DEVICE), )
+KVM_OPTION = -enable-kvm -cpu qemu64,svm=on,npt=on
+else
+KVM_OPTION =
+endif
+
 EXPORT_TOPDIR := $(TOPDIR)
 EXPORT_OUT_DIR := $(OUT_DIR)
 EXPORT_ROOTFS_OUT_DIR := $(ROOTFS_OUT_DIR)
@@ -42,8 +49,7 @@ export EXPORT_TOPDIR EXPORT_OUT_DIR EXPORT_ROOTFS_OUT_DIR EXPORT_KERNEL_IMAGE EX
 
 all: kernel qemu-x initrd rootfs
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rw rootfstype=ext4 \
-	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) \
-	-enable-kvm -cpu qemu64,svm=on,npt=on \
+	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE)  $(KVM_OPTION) \
 	# -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
 	# -device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
 	# disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
@@ -54,8 +60,7 @@ all: kernel qemu-x initrd rootfs
 
 install:
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/sda rw rootfstype=ext4 \
-	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) \
-	-enable-kvm -cpu qemu64,svm=on,npt=on \
+	console=ttyS0 crashkernel=64M@16M" -hda $(ROOTFS_IMAGE) $(KVM_OPTION) \
 	# -drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk0 \
 	# -device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,\
 	# disable-modern=off,iommu_platform=on,ats=on -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
