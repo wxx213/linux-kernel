@@ -105,6 +105,9 @@ disk-mount:
 	mkdir -p $(OUT_DIR)/disks
 	sudo mount -o loop $(ROOTFS_IMAGE) $(OUT_DIR)/disks/
 
+crash_debug:
+	sudo crash $(KERNEL_OUT_DIR)/vmlinux $(OUT_DIR)/disks/tmp/vmcore
+
 disk-umount:
 	sudo umount $(OUT_DIR)/disks/
 
