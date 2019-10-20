@@ -2,6 +2,7 @@
 openssh-server # make ssh available
 git make gcc
 libelf-dev bc # for kernel
+bison flex libssl-dev # for kernel-4.18
 python pkg-config zlib1g-dev libglib2.0-dev libpixman-1-dev # for qemu
 android-tools-fsutils # for rootfs
 autoconf # for kexec_tool
