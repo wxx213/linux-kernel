@@ -70,6 +70,7 @@ install:
 	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 kernel: 
+	mkdir -p $(KERNEL_OUT_DIR)
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) x86_64_defconfig
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) bzImage -j2
 	cp $(KERNEL_OBJ_IMAGE) $(KERNEL_IMAGE)
