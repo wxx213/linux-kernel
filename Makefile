@@ -16,6 +16,7 @@ INITRD_OUT_DIR := $(OUT_DIR)/initrd
 
 ROOTFS_IMAGE := $(OUT_DIR)/qemu-root.img
 INITRD_IMGE := $(OUT_DIR)/initrd.img
+VIRTIO_DISK := $(OUT_DIR)/virtio-disk.immg
 
 MAKE_EXT4FS := make_ext4fs
 
@@ -50,7 +51,9 @@ all: kernel qemu-x initrd rootfs
 	rootfstype=ext4 console=ttyS0 crashkernel=64M@16M"  $(KVM_OPTION) \
 	-drive file=$(ROOTFS_IMAGE),if=none,id=drive-virtio-disk0 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,\
-	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on
+	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
+	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
+	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1
 	# -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
 	# -device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
@@ -62,7 +65,9 @@ install:
 	rootfstype=ext4 console=ttyS0 crashkernel=64M@16M" $(KVM_OPTION) \
 	-drive file=$(ROOTFS_IMAGE),if=none,id=drive-virtio-disk0 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,\
-	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on
+	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
+	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
+	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1
 	# -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
 	# -device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust \
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
@@ -92,7 +97,7 @@ rootfs: busybox
 	cp $(INITRD_IMGE) $(BUSYBOX_OUT_DIR)/usr/
 	$(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
-	# $(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1024M
+	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1G
 
 initrd:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
