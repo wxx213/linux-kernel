@@ -11,6 +11,9 @@ BUSYBOX_DIR := $(TOPDIR)/rootfs/busybox
 BUSYBOX_OUT_DIR := $(OUT_DIR)/busybox
 BUSYBOX_OBJ_DIR := $(OUT_OBJ_DIR)/BUSYBOX_OBJ
 
+CENTOS_DIR := $(TOPDIR)/centos
+CENTOS_OUT_DIR := $(OUT_DIR)/centos
+
 ROOTFS_OUT_DIR := $(BUSYBOX_OUT_DIR)
 INITRD_OUT_DIR := $(OUT_DIR)/initrd
 
@@ -97,6 +100,12 @@ rootfs: busybox
 	cp $(INITRD_IMGE) $(BUSYBOX_OUT_DIR)/usr/
 	$(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
+	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1G
+
+centos-rootfs:
+	make -C $(CENTOS_DIR) ROOTFS=$(CENTOS_OUT_DIR)
+	# need to run with root, or there will be problem with the rootfs
+	$(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(CENTOS_OUT_DIR)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1G
 
 initrd:
