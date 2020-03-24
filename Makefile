@@ -56,12 +56,8 @@ all: kernel qemu-x initrd rootfs
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,\
 	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
-	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1
-	# -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
-	# -device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust
-	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
-	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
-	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
+	#-netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 install:
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/vda rw \
@@ -70,12 +66,8 @@ install:
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,\
 	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
-	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1
-	# -drive file=$(SCSI_DISK),if=none,id=drive-nvme-disk0 \
-	# -device nvme,drive=drive-nvme-disk0,id=nvme-disk0,serial=usr_cust \
-	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,\
-	# downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown \
-	# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
+	#-netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 kernel: 
 	mkdir -p $(KERNEL_OUT_DIR)
