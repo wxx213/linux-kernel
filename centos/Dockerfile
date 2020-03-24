@@ -1,10 +1,12 @@
 FROM centos:7
 
-RUN yum install -y vim net-tools rpm
+RUN yum install -y vim net-tools rpm dhclient
 # change root password
 RUN echo "root:root" | chpasswd
 
-RUN yum install -y initscripts
+#RUN yum install -y initscripts
+#RUN touch /etc/sysconfig/network
 
-RUN touch /etc/sysconfig/network
-RUN echo "GATEWAY=192.168.2.1" >> /etc/sysconfig/network
+# config the net with dhclient
+RUN chmod 755 /etc/rc.d/rc.local
+RUN echo "dhclient eth0" >> /etc/rc.d/rc.local
