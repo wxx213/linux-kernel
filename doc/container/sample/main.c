@@ -24,7 +24,7 @@ char* const container_args[] = {
 	NULL
 };
 
-static int prepare_root()
+static int prepare_dev_root()
 {
 	int ret;
 
@@ -49,6 +49,41 @@ static int prepare_root()
 		return ret;
 	}
 	ret = system("cp -r busybox/* container_rootfs/");
+	if(ret) {
+		perror("cp -r busybox/* container_rootfs/ error");
+		return ret;
+	}
+	return 0;
+}
+
+static int prepare_bind_mount_root()
+{
+	int ret;
+
+	ret = system("mkdir -p container_rootfs");
+	if(ret) {
+		perror("mkdir container_rootfs error");
+		return ret;
+	}
+
+	ret = system("mount -B busybox container_rootfs/");
+	if(ret) {
+		perror("mount busybox container_rootfs/ error");
+		return ret;
+	}
+	return 0;
+}
+
+static int prepare_directory_root()
+{
+	int ret;
+
+	ret = system("mkdir -p container_rootfs");
+	if(ret) {
+		perror("mkdir container_rootfs error");
+		return ret;
+	}
+    ret = system("cp -r busybox/* container_rootfs/");
 	if(ret) {
 		perror("cp -r busybox/* container_rootfs/ error");
 		return ret;
@@ -281,7 +316,9 @@ int main(int args, char *argv[])
 
 	printf("Program start\n");
 
-	ret = prepare_root();
+	// ret = prepare_dev_root();
+	// ret = prepare_directory_root();
+	ret = prepare_bind_mount_root();
 	if(ret) {
 		perror("prepare_root failed");
 		return 1;
