@@ -33,9 +33,14 @@ static int prepare_dev_root()
 		perror("dd if=/dev/zero of=container_root bs=1024K count=1000 error");
 		return ret;
 	}
-	ret = system("mkfs.ext4 container_root");
+	ret = system("losetup /dev/loop2020 container_root");
 	if(ret) {
-		perror("mkfs.ext4 container_root error");
+		perror("losetup /dev/loop2020 container_root error");
+		return ret;
+	}
+	ret = system("mkfs.ext4 /dev/loop2020");
+	if(ret) {
+		perror("mkfs.ext4 /dev/loop2020 error");
 		return ret;
 	}
 	ret = system("mkdir -p container_rootfs");
@@ -43,9 +48,11 @@ static int prepare_dev_root()
 		perror("mkdir container_rootfs error");
 		return ret;
 	}
-	ret = system("mount -o loop container_root container_rootfs/");
+	// ret = system("mount -o loop container_root container_rootfs/");
+	ret = system("mount /dev/loop2020 container_rootfs/");
 	if(ret) {
-		perror("mount container_root container_rootfs/ error");
+		// perror("mount container_root container_rootfs/ error");
+		perror("mount /dev/loop2020 container_rootfs/ error");
 		return ret;
 	}
 	ret = system("cp -r busybox/* container_rootfs/");
@@ -99,6 +106,11 @@ static int cleanup_root()
 	if(ret) {
 		perror("umount container_rootfs error");
 		return ret;
+	}
+
+	ret = system("losetup -d /dev/loop2020");
+	if(ret) {
+		perror("losetup -d /dev/loop2020 error");
 	}
 	return 0;
 }
@@ -316,9 +328,9 @@ int main(int args, char *argv[])
 
 	printf("Program start\n");
 
-	// ret = prepare_dev_root();
+	ret = prepare_dev_root();
 	// ret = prepare_directory_root();
-	ret = prepare_bind_mount_root();
+	// ret = prepare_bind_mount_root();
 	if(ret) {
 		perror("prepare_root failed");
 		return 1;
