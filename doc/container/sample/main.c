@@ -134,6 +134,17 @@ static int set_as_root()
 	return 0;
 }
 
+static int bind_mount_rootfs()
+{
+	int ret;
+
+	ret = system("mount -B container_rootfs container_rootfs");
+    if(ret) {
+        perror("mount -B container_rootfs container_rootfs error:");
+        return 1;
+    }
+}
+
 static int switch_to_rootfs()
 {
 	int ret;
@@ -302,6 +313,13 @@ int container_main(void *args)
 		exit(1);
 	}
 #endif
+	// for prepare_directory_root() and  prepare_dev_root()
+	ret = bind_mount_rootfs();
+	if(ret) {
+        perror("bind_mount_rootfs error");
+        exit(1);
+    }
+
 	ret = switch_to_rootfs();
 	if(ret) {
 		perror("switch_to_rootfs error");
@@ -328,9 +346,8 @@ int main(int args, char *argv[])
 
 	printf("Program start\n");
 
-	ret = prepare_dev_root();
-	// ret = prepare_directory_root();
-	// ret = prepare_bind_mount_root();
+	// ret = prepare_dev_root();
+	ret = prepare_directory_root();
 	if(ret) {
 		perror("prepare_root failed");
 		return 1;
