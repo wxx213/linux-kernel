@@ -10,3 +10,6 @@ RUN echo "root:root" | chpasswd
 # config the net with dhclient
 RUN chmod 755 /etc/rc.d/rc.local
 RUN echo "dhclient eth0" >> /etc/rc.d/rc.local
+
+# ssh
+RUN yum install -y openssh-server
