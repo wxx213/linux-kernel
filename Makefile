@@ -73,6 +73,7 @@ kernel:
 	mkdir -p $(KERNEL_OUT_DIR)
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) x86_64_defconfig
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) bzImage -j2
+	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules -j2
 	cp $(KERNEL_OBJ_IMAGE) $(KERNEL_IMAGE)
 
 busybox:
@@ -96,8 +97,9 @@ rootfs: busybox
 
 centos-rootfs:
 	make -C $(CENTOS_DIR) ROOTFS=$(CENTOS_OUT_DIR)
+	sudo make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules_install INSTALL_MOD_PATH=$(CENTOS_OUT_DIR)
 	# need to run with root, or there will be problem with the rootfs
-	$(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(CENTOS_OUT_DIR)
+	sudo $(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(CENTOS_OUT_DIR)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1G
 
 initrd:
