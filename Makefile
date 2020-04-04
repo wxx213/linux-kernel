@@ -21,7 +21,7 @@ ROOTFS_IMAGE := $(OUT_DIR)/qemu-root.img
 INITRD_IMGE := $(OUT_DIR)/initrd.img
 VIRTIO_DISK := $(OUT_DIR)/virtio-disk.immg
 
-MAKE_EXT4FS := make_ext4fs
+MAKE_EXT4FS := $(TOPDIR)/tools/make_ext4fs/make_ext4fs
 
 QEMU_DIR := $(TOPDIR)/qemu/qemu-2.12.1
 QEMU_OBJ_DIR := $(OUT_OBJ_DIR)/qemu
@@ -76,13 +76,16 @@ kernel:
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules -j2
 	cp $(KERNEL_OBJ_IMAGE) $(KERNEL_IMAGE)
 
+$(MAKE_EXT4FS):
+	make -C $(TOPDIR)/tools/make_ext4fs
+
 busybox:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y defconfig
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y \
 	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
 
-rootfs: busybox
+rootfs: busybox $(MAKE_EXT4FS)
 	# dd if=/dev/zero of=$(ROOTFS_OBJ_OUT)/disks/qemu-root bs=1024K count=1000
 	#  mkfs.ext4 $(ROOTFS_OBJ_OUT)/disks/qemu-root
 	# sudo mount -o loop $(ROOTFS_OBJ_OUT)/disks/qemu-root $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
@@ -95,7 +98,7 @@ rootfs: busybox
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1G
 
-centos-rootfs:
+centos-rootfs: $(MAKE_EXT4FS)
 	make -C $(CENTOS_DIR) ROOTFS=$(CENTOS_OUT_DIR)
 	sudo make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules_install INSTALL_MOD_PATH=$(CENTOS_OUT_DIR)
 	# need to run with root, or there will be problem with the rootfs
@@ -164,6 +167,7 @@ clean:
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
 	cd $(QEMU_DIR) && make distclean
 	make clean -C $(TOPDIR)/debug
+	make clean -C $(TOPDIR)/tools/make_ext4fs
 
 help:
 	@echo "make/make all       - build all and start qemu with the build kernel and rootfs"
