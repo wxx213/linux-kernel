@@ -49,7 +49,7 @@ EXPORT_INITRD_OUT_DIR := $(INITRD_OUT_DIR)
 
 export EXPORT_TOPDIR EXPORT_OUT_DIR EXPORT_ROOTFS_OUT_DIR EXPORT_KERNEL_IMAGE EXPORT_INITRD_OUT_DIR
 
-all: kernel qemu-x initrd rootfs
+install:
 	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/vda rw \
 	rootfstype=ext4 console=ttyS0 crashkernel=64M@16M"  $(KVM_OPTION) \
 	-drive file=$(ROOTFS_IMAGE),if=none,id=drive-virtio-disk0 \
@@ -57,19 +57,11 @@ all: kernel qemu-x initrd rootfs
 	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
-	-serial unix:$(OUT_DIR)/serial.sock,server,nowait \
-	#-netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+	# -serial unix:$(OUT_DIR)/serial.sock,server,nowait \
+	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
-install:
-	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/vda rw \
-	rootfstype=ext4 console=ttyS0 crashkernel=64M@16M" $(KVM_OPTION) \
-	-drive file=$(ROOTFS_IMAGE),if=none,id=drive-virtio-disk0 \
-	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,\
-	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
-	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
-	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
-	-serial unix:$(OUT_DIR)/serial.sock,server,nowait \
-	#-netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+all: kernel qemu-x initrd rootfs 
+	echo "build comple, run make to start the vm"
 
 kernel: 
 	mkdir -p $(KERNEL_OUT_DIR)
@@ -172,10 +164,12 @@ clean:
 	make clean -C $(TOPDIR)/tools/make_ext4fs
 
 help:
-	@echo "make/make all       - build all and start qemu with the build kernel and rootfs"
+	@echo "make                - equal to make insall"
+	@echo "make all            - build all and start qemu with the build kernel and rootfs"
 	@echo "make install        - only start qemu with the build kernel and rootfs"
 	@echo "make kernel         - build kernel"
-	@echo "make rootfs         - build rootfs"
+	@echo "make rootfs         - build busybox rootfs"
+	@echo "make centos-rootfs  - build centos rootfs to replace the busybox rootfs"
 	@echo "make initrd         - build initrd"
 	@echo "make qemu-x         - build qemu"
 	@echo "make kvmsample      - build kvm sample codes"
