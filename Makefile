@@ -57,6 +57,7 @@ all: kernel qemu-x initrd rootfs
 	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
+	-serial unix:$(OUT_DIR)/serial.sock,server,nowait \
 	#-netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 install:
@@ -67,6 +68,7 @@ install:
 	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
+	-serial unix:$(OUT_DIR)/serial.sock,server,nowait \
 	#-netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 kernel: 
