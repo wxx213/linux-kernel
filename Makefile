@@ -50,7 +50,7 @@ EXPORT_INITRD_OUT_DIR := $(INITRD_OUT_DIR)
 export EXPORT_TOPDIR EXPORT_OUT_DIR EXPORT_ROOTFS_OUT_DIR EXPORT_KERNEL_IMAGE EXPORT_INITRD_OUT_DIR
 
 install:
-	$(QEMU_EXE) -smp 2 -m 2048M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/vda rw \
+	$(QEMU_EXE) -smp 2 -m 4096M -kernel $(KERNEL_IMAGE) -nographic -append "root=/dev/vda rw \
 	rootfstype=ext4 console=ttyS0 crashkernel=64M@16M"  $(KVM_OPTION) \
 	-drive file=$(ROOTFS_IMAGE),if=none,id=drive-virtio-disk0 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,\
