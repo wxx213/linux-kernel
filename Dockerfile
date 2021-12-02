@@ -14,6 +14,8 @@ RUN yum install -y devtoolset-7
 
 # for kernel build
 RUN yum install -y make gcc elfutils-libelf-devel bc
+# for centos-4.18 kernel build
+RUN yum install -y bison flex openssl-devel openssl
 
 # for qemu build
 RUN yum install -y gtk2-devel
