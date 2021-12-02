@@ -16,9 +16,6 @@ QEMU_BRANCH=master
 ROOTFS_DIR=$CURRDIR/rootfs/busybox
 ROOTFS_BRANCH=github
 
-CONTAINER_DIR=$CURRDIR/container/lxc
-CONTAINER_BRANCH=master
-
 # sync current git
 git pull
 
@@ -50,14 +47,4 @@ git pull
 cd $CURRDIR
 else
 git clone https://gitee.com/wxx213/busybox_rootfs.git -b $ROOTFS_BRANCH $ROOTFS_DIR
-fi
-
-if [ -d $CONTAINER_DIR ]
-then
-cd $CONTAINER_DIR
-echo Entering into `pwd`
-git pull
-cd $CURRDIR
-else
-git clone https://gitee.com/wxx213/container.git -b $CONTAINER_BRANCH $CONTAINER_DIR
 fi
