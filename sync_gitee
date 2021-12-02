@@ -8,7 +8,7 @@ KERNEL_DIR=$CURRDIR/linux-stable
 #   centos-3.10 : the centos kernel 3.10.0-862.el7
 #   centos-4.18 : the centos kernel 4.18.0-80.7.2.el7
 #
-KERNEL_BRANCH=kernel-4.14
+KERNEL_BRANCH=centos-4.18
 
 QEMU_DIR=$CURRDIR/qemu/qemu-2.12.1
 QEMU_BRANCH=master
