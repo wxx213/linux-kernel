@@ -31,3 +31,7 @@ RUN yum install -y autoconf
 
 # for make_ext4fs runtime
 RUN yum install -y pcre && ln -s /lib64/libpcre.so.1 /lib64/libpcre.so.3
+
+ARG USER_NAME
+RUN useradd ${USER_NAME}
+USER ${USER_NAME}

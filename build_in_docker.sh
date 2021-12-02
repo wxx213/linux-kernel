@@ -13,5 +13,6 @@ USER_NAME=`whoami`
 IMAGE=linux-kernel-dev
 BUILD_DIR=/tmp/linux-kernel
 
-docker build -t $IMAGE .
-docker run -t --rm -u $USER_NAME -v $PWD:$BUILD_DIR $IMAGE bash -c "source scl_source enable devtoolset-7 && make -C $BUILD_DIR $TARGET"
+docker build -t $IMAGE --build-arg USER_NAME=$USER_NAME .
+docker run -t --rm -v $PWD:$BUILD_DIR $IMAGE bash -c \
+	"source scl_source enable devtoolset-7 && make -C $BUILD_DIR $TARGET"
