@@ -2,10 +2,10 @@ FROM centos:7
 
 # replace with aliyun repo mirror
 # if you don't need, just remove it
-RUN yum install -y sudo wget
-RUN cd /etc/yum.repos.d  && sudo mv CentOS-Base.repo CentOS-Base.repo.bak && \
-	sudo wget -O CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && yum clean all && \
-	yum clean all && yum makecache
+# RUN yum install -y sudo wget
+# RUN cd /etc/yum.repos.d  && sudo mv CentOS-Base.repo CentOS-Base.repo.bak && \
+#	sudo wget -O CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && yum clean all && \
+#	yum clean all && yum makecache
 
 
 # for newer gcc
