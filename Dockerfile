@@ -33,5 +33,5 @@ RUN yum install -y autoconf
 RUN yum install -y pcre && ln -s /lib64/libpcre.so.1 /lib64/libpcre.so.3
 
 ARG USER_NAME
-RUN useradd ${USER_NAME}
+RUN id ${USER_NAME} || useradd ${USER_NAME}
 USER ${USER_NAME}
