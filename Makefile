@@ -41,6 +41,8 @@ else
 KVM_OPTION =
 endif
 
+CPUS = $(shell cat /proc/cpuinfo | grep processor | wc -l)
+
 EXPORT_TOPDIR := $(TOPDIR)
 EXPORT_OUT_DIR := $(OUT_DIR)
 EXPORT_ROOTFS_OUT_DIR := $(ROOTFS_OUT_DIR)
@@ -66,8 +68,8 @@ all: kernel qemu-x initrd rootfs
 kernel: 
 	mkdir -p $(KERNEL_OUT_DIR)
 	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) x86_64_defconfig
-	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) bzImage -j2
-	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules -j2
+	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) bzImage -j$(CPUS)
+	make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules -j$(CPUS)
 	cp $(KERNEL_OBJ_IMAGE) $(KERNEL_IMAGE)
 
 $(MAKE_EXT4FS):
@@ -75,9 +77,9 @@ $(MAKE_EXT4FS):
 
 busybox:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y -j$(CPUS) defconfig
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=rootfs CONFIG_STATIC=y \
-	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) install
+	CONFIG_PREFIX=$(BUSYBOX_OUT_DIR) -j$(CPUS) install
 
 rootfs: busybox $(MAKE_EXT4FS)
 	# dd if=/dev/zero of=$(ROOTFS_OBJ_OUT)/disks/qemu-root bs=1024K count=1000
@@ -86,7 +88,7 @@ rootfs: busybox $(MAKE_EXT4FS)
 	# sudo cp -r $(BUSYBOX_OUT_DIR)/* $(ROOTFS_OBJ_OUT)/mnt/qemu-root/
 	# sudo umount $(ROOTFS_OBJ_OUT)/mnt/qemu-root
 	# dd if=/dev/zero of=$(VIRTIO_DISK) bs=1024K count=1000
-	make -C $(TOPDIR)/debug
+	make -C $(TOPDIR)/debug -j$(CPUS)
 	cp $(INITRD_IMGE) $(BUSYBOX_OUT_DIR)/usr/
 	$(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(BUSYBOX_OUT_DIR)
 	# $(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE)
@@ -102,9 +104,9 @@ centos-rootfs: $(MAKE_EXT4FS)
 initrd:
 	mkdir -p $(BUSYBOX_OBJ_DIR)
 	mkdir -p $(INITRD_OUT_DIR)
-	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=initrd CONFIG_STATIC=y defconfig
+	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=initrd CONFIG_STATIC=y -j$(CPUS) defconfig
 	make -C $(BUSYBOX_DIR) ARCH=x86 O=$(BUSYBOX_OBJ_DIR) USR_CUST_TARGET=initrd CONFIG_STATIC=y \
-	CONFIG_PREFIX=$(INITRD_OUT_DIR) install
+	CONFIG_PREFIX=$(INITRD_OUT_DIR) -j$(CPUS) install
 	(cd $(INITRD_OUT_DIR); find . | cpio -o -H newc | gzip) > $(INITRD_IMGE)
 
 disk-mount:
@@ -122,7 +124,7 @@ disk-umount:
 
 qemu-x:
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
-	cd $(QEMU_DIR) && make
+	cd $(QEMU_DIR) && make -j$(CPUS)
 
 kvmsample:
 	make -C $(KVMSAMPLE_DIR) O=$(KVMSAMPLE_OBJ_DIR)
