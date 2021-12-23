@@ -24,9 +24,9 @@ VIRTIO_DISK := $(OUT_DIR)/virtio-disk.immg
 MAKE_EXT4FS := $(TOPDIR)/tools/make_ext4fs/make_ext4fs
 
 QEMU_DIR := $(TOPDIR)/qemu/qemu-2.12.1
-QEMU_OBJ_DIR := $(OUT_OBJ_DIR)/qemu
-QEMU_EXE := $(QEMU_DIR)/x86_64-softmmu/qemu-system-x86_64
-QEMU_IMG_EXE := $(QEMU_DIR)/qemu-img
+QEMU_OUT_DIR := $(OUT_DIR)/qemu
+QEMU_EXE := $(QEMU_OUT_DIR)/usr/local/bin/qemu-system-x86_64
+QEMU_IMG_EXE := $(QEMU_OUT_DIR)/usr/local/bin/qemu-img
 
 KVMSAMPLE_OBJ_DIR := $(OUT_OBJ_DIR)/kvmsample
 KVMSAMPLE_DIR := $(TOPDIR)/doc/qemu/kvm/sample
@@ -123,8 +123,10 @@ disk-umount:
 	sudo umount $(OUT_DIR)/disks/
 
 qemu-x:
+	mkdir -p $(QEMU_OUT_DIR)
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
 	cd $(QEMU_DIR) && make -j$(CPUS)
+	cd $(QEMU_DIR) && make DESTDIR=$(QEMU_OUT_DIR) install
 
 kvmsample:
 	make -C $(KVMSAMPLE_DIR) O=$(KVMSAMPLE_OBJ_DIR)
