@@ -15,6 +15,10 @@ USER_ID=`id -u`
 IMAGE=linux-kernel-dev
 BUILD_DIR=/tmp/linux-kernel
 
-docker build -t $IMAGE --build-arg USER_NAME=$USER_NAME --build-arg USER_ID=$USER_ID .
-docker run -ti --rm -v $PWD:$BUILD_DIR $IMAGE bash -c \
-	"source scl_source enable devtoolset-7 && make -C $BUILD_DIR $TARGET"
+if [ $TARGET != centos-rootfs ]; then
+	docker build -t $IMAGE --build-arg USER_NAME=$USER_NAME --build-arg USER_ID=$USER_ID .
+	docker run -ti --rm -v $PWD:$BUILD_DIR $IMAGE bash -c \
+		"source scl_source enable devtoolset-7 && make -C $BUILD_DIR $TARGET"
+else
+	make centos-rootfs
+fi
