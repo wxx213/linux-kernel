@@ -13,6 +13,7 @@ BUSYBOX_OBJ_DIR := $(OUT_OBJ_DIR)/BUSYBOX_OBJ
 
 CENTOS_DIR := $(TOPDIR)/centos
 CENTOS_OUT_DIR := $(OUT_DIR)/centos
+CENTOS_PREPARED ?= no
 
 ROOTFS_OUT_DIR := $(BUSYBOX_OUT_DIR)
 INITRD_OUT_DIR := $(OUT_DIR)/initrd
@@ -62,7 +63,7 @@ install:
 	# -serial unix:$(OUT_DIR)/serial.sock,server,nowait \
 	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
-all: kernel qemu-x initrd rootfs 
+all: kernel qemu-x initrd centos-rootfs
 	echo "build comple, run make to start the vm"
 
 kernel: 
@@ -95,7 +96,10 @@ rootfs: busybox $(MAKE_EXT4FS)
 	$(QEMU_IMG_EXE) create -f qcow2 $(VIRTIO_DISK) 1G
 
 centos-rootfs: $(MAKE_EXT4FS)
-	make -C $(CENTOS_DIR) ROOTFS=$(CENTOS_OUT_DIR)
+ifeq ($(CENTOS_PREPARED), no)
+	sudo rm -rf $(CENTOS_OUT_DIR)/*
+	./prepare_centos.sh $(CENTOS_OUT_DIR)
+endif
 	sudo make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules_install INSTALL_MOD_PATH=$(CENTOS_OUT_DIR)
 	# need to run with root, or there will be problem with the rootfs
 	sudo $(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(CENTOS_OUT_DIR)

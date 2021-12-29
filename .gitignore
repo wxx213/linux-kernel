@@ -4,3 +4,6 @@ qemu/*
 rootfs/*
 linux-stable/
 container/*
+tools/make_ext4fs/*.o
+tools/make_ext4fs/*.a
+tools/make_ext4fs/make_ext4fs
