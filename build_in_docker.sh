@@ -21,6 +21,11 @@ BUILD_DIR=/tmp/linux-kernel
 
 CENTOS_PREPARED="no"
 
+if [ $TARGETS == "runtime-image" ]; then
+	docker build -t linux-kernel-runtime --build-arg USER_NAME=root --build-arg USER_ID=0 -f Dockerfile.runtime .
+	exit 0
+fi
+
 docker build -t $IMAGE --build-arg USER_NAME=$USER_NAME --build-arg USER_ID=$USER_ID -f Dockerfile.build .
 
 for TARGET in $TARGETS; do
