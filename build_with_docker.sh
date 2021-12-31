@@ -30,7 +30,7 @@ docker build -t $IMAGE --build-arg USER_NAME=$USER_NAME --build-arg USER_ID=$USE
 
 for TARGET in $TARGETS; do
 	if [ $TARGET == centos-rootfs ]; then
-		docker run -ti --rm -v $PWD:$BUILD_DIR $IMAGE bash -c "mkdir -p $BUILD_DIR/out && chmod +666 $BUILD_DIR/out"
+		docker run -ti --rm -v $PWD:$BUILD_DIR $IMAGE bash -c "mkdir -p $BUILD_DIR/out && chmod +666 $BUILD_DIR/out && rm -rf $BUILD_DIR/out/centos/*"
 		./prepare_centos.sh $PWD/out/centos
 		CENTOS_PREPARED="yes"
 	fi
