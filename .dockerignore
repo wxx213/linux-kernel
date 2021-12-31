@@ -1,5 +1,5 @@
 ./*
-!out/bzImage
-!out/qemu
-!out/qemu-root.img
-!out/virtio-disk.immg
+# !out/bzImage
+# !out/qemu
+# !out/qemu-root.img
+# !out/virtio-disk.immg
