@@ -61,7 +61,7 @@ install:
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
 	# -serial unix:$(OUT_DIR)/serial.sock,server,nowait \
-	# -netdev tap,id=hostnet0,script=$(QEMU_DIR)/usr_cust/etc/qemu-ifup,downscript=$(QEMU_DIR)/usr_cust/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
+	# -netdev tap,id=hostnet0,script=$(QEMU_OUT_DIR)/etc/qemu-ifup,downscript=$(QEMU_OUT_DIR)/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34
 
 all: kernel qemu-x initrd centos-rootfs
 	echo "build comple, run make to start the vm"
