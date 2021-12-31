@@ -131,6 +131,8 @@ qemu-x:
 	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
 	cd $(QEMU_DIR) && make -j$(CPUS)
 	cd $(QEMU_DIR) && make DESTDIR=$(QEMU_OUT_DIR) install
+	install -D $(QEMU_DIR)/usr_cust/etc/qemu-ifup $(QEMU_OUT_DIR)/etc/qemu-ifup
+	install -D  $(QEMU_DIR)/usr_cust/etc/qemu-ifdown $(QEMU_OUT_DIR)/etc/qemu-ifdown
 
 kvmsample:
 	make -C $(KVMSAMPLE_DIR) O=$(KVMSAMPLE_OBJ_DIR)
