@@ -34,6 +34,7 @@ for TARGET in $TARGETS; do
 		./prepare_centos.sh $PWD/out/centos
 		CENTOS_PREPARED="yes"
 	fi
-	docker run -ti --rm -v $PWD:$BUILD_DIR $IMAGE bash -c \
-			"source scl_source enable devtoolset-7 && make CENTOS_PREPARED=$CENTOS_PREPARED -C $BUILD_DIR $TARGET"
+	docker run -ti --rm -v $PWD:$BUILD_DIR --cap-add NET_ADMIN --device /dev/net/tun:/dev/net/tun:rw \
+		$IMAGE bash -c \
+		"source scl_source enable devtoolset-7 && make CENTOS_PREPARED=$CENTOS_PREPARED -C $BUILD_DIR $TARGET"
 done
