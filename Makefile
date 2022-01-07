@@ -42,6 +42,12 @@ else
 KVM_OPTION =
 endif
 
+ifneq ($(wildcard /var/.indocker), )
+SHARE_OPTION = -fsdev local,security_model=passthrough,id=fsdev0,path=/var/share -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare
+else
+SHARE_OPTION =
+endif
+
 CPUS = $(shell cat /proc/cpuinfo | grep processor | wc -l)
 
 EXPORT_TOPDIR := $(TOPDIR)
@@ -61,6 +67,7 @@ install:
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
 	-netdev tap,id=hostnet0,script=$(QEMU_OUT_DIR)/etc/qemu-ifup,downscript=$(QEMU_OUT_DIR)/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34 \
+	$(SHARE_OPTION) \
 	# -serial unix:$(OUT_DIR)/serial.sock,server,nowait
 
 all: kernel qemu-x initrd centos-rootfs
@@ -128,7 +135,7 @@ disk-umount:
 
 qemu-x:
 	mkdir -p $(QEMU_OUT_DIR)
-	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu"
+	cd $(QEMU_DIR) && $(QEMU_DIR)/configure --target-list="i386-softmmu x86_64-softmmu" --enable-virtfs
 	cd $(QEMU_DIR) && make -j$(CPUS)
 	cd $(QEMU_DIR) && make DESTDIR=$(QEMU_OUT_DIR) install
 	install -D $(QEMU_DIR)/usr_cust/etc/qemu-ifup $(QEMU_OUT_DIR)/etc/qemu-ifup

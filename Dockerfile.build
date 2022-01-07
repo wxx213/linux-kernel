@@ -18,7 +18,7 @@ RUN yum install -y make gcc elfutils-libelf-devel bc
 RUN yum install -y bison flex openssl-devel openssl
 
 # for qemu build
-RUN yum install -y gtk2-devel
+RUN yum install -y gtk2-devel libcap-devel libattr-devel
 
 # for qemu runtime
 # RUN yum install -y libX11 gtk2
