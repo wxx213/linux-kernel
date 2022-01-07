@@ -9,7 +9,19 @@ RUN echo "root:root" | chpasswd
 
 # config the net with dhclient
 RUN chmod 755 /etc/rc.d/rc.local
-RUN echo "dhclient eth0" >> /etc/rc.d/rc.local
+RUN  echo -e "\
+if [ -f "/var/share/.hostindocker" ]; then\n\
+	if [ -f "/var/share/net.cfg" ]; then\n\
+		IP=\`cat /var/share/net.cfg |  awk '/ipaddress/ {print $2}'\`\n\
+		MASK=\`cat /var/share/net.cfg |  awk '/netmask/ {print $2}'\`\n\
+		GW=\`cat /var/share/net.cfg |  awk '/gateway/ {print $2}'\`\n\
+		ifconfig eth0 \$IP netmask \$MASK\n\
+		route add default gw \$GW\n\
+	fi\n\
+	/bin/cp -f /var/share/resolv.conf /etc/resolv.conf\n\
+else\n\
+	dhclient eth0\n\
+fi" >> /etc/rc.d/rc.local
 
 # ssh
 RUN yum install -y openssh-server
