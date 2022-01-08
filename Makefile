@@ -49,6 +49,7 @@ SHARE_OPTION =
 endif
 
 CPUS = $(shell cat /proc/cpuinfo | grep processor | wc -l)
+MAC = $(shell echo 52:`od /dev/urandom -w5 -tx1 -An|head -n 1|sed -e 's/ //' -e 's/ /:/g'`)
 
 EXPORT_TOPDIR := $(TOPDIR)
 EXPORT_OUT_DIR := $(OUT_DIR)
@@ -66,7 +67,7 @@ install:
 	disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
 	-drive file=$(VIRTIO_DISK),if=none,id=drive-virtio-disk1 \
 	-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk1,id=virtio-disk1 \
-	-netdev tap,id=hostnet0,script=$(QEMU_OUT_DIR)/etc/qemu-ifup,downscript=$(QEMU_OUT_DIR)/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:00:66:98:34 \
+	-netdev tap,id=hostnet0,script=$(QEMU_OUT_DIR)/etc/qemu-ifup,downscript=$(QEMU_OUT_DIR)/etc/qemu-ifdown -device virtio-net-pci,netdev=hostnet0,id=net0,mac=$(MAC) \
 	$(SHARE_OPTION) \
 	# -serial unix:$(OUT_DIR)/serial.sock,server,nowait
 
