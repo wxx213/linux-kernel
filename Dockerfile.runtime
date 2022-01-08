@@ -9,7 +9,7 @@ FROM centos:7
 
 
 # for qemu runtime
-RUN yum install -y libX11 gtk2 which iproute tc net-tools
+RUN yum install -y libX11 gtk2 which iproute tc net-tools socat
 
 # for make_ext4fs runtime
 RUN yum install -y pcre && ln -s /lib64/libpcre.so.1 /lib64/libpcre.so.3
