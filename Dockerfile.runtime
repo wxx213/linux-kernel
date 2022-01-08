@@ -9,7 +9,7 @@ FROM centos:7
 
 
 # for qemu runtime
-RUN yum install -y libX11 gtk2
+RUN yum install -y libX11 gtk2 which iproute tc net-tools
 
 # for make_ext4fs runtime
 RUN yum install -y pcre && ln -s /lib64/libpcre.so.1 /lib64/libpcre.so.3
@@ -17,12 +17,13 @@ RUN yum install -y pcre && ln -s /lib64/libpcre.so.1 /lib64/libpcre.so.3
 # for root
 RUN yum install -y sudo
 
+RUN touch /var/.indocker
+
 # copy
 RUN mkdir -p /opt/linux-kernel
 COPY out/bzImage /opt/linux-kernel/bzImage
 COPY out/qemu /opt/linux-kernel/qemu
 COPY out/qemu-root.img /opt/linux-kernel/qemu-root.img
-COPY out/virtio-disk.immg /opt/linux-kernel/virtio-disk.immg
 
 ARG USER_NAME
 ARG USER_ID
