@@ -111,9 +111,12 @@ ifeq ($(CENTOS_PREPARED), no)
 endif
 	sudo make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) modules_install INSTALL_MOD_PATH=$(CENTOS_OUT_DIR)
 	sudo make -C $(KERNEL_DIR) ARCH=x86 O=$(KERNEL_OUT_DIR) headers_install INSTALL_HDR_PATH=$(CENTOS_OUT_DIR)/usr
-	sudo mkdir -p $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)
-	sudo cp -r $(KERNEL_DIR)/* $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/
-	sudo cp -r $(KERNEL_OUT_DIR)/* $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/
+	sudo mkdir -p $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/include
+	sudo cp -r  $(KERNEL_DIR)/include/* $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/include/
+	sudo cp -r $(KERNEL_OUT_DIR)/include/* $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/include/
+	sudo mkdir -p $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/arch/x86/include
+	sudo cp -r  $(KERNEL_DIR)/arch/x86/include/* $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/arch/x86/include/
+	sudo cp -r $(KERNEL_OUT_DIR)/arch/x86/include/* $(CENTOS_OUT_DIR)/$(KERNEL_OUT_DIR)/arch/x86/include/
 	# need to run with root, or there will be problem with the rootfs
 	sudo $(MAKE_EXT4FS) -l 20G $(ROOTFS_IMAGE) $(CENTOS_OUT_DIR)
 	$(QEMU_IMG_EXE) convert -f raw -O qcow2 $(ROOTFS_IMAGE) $(ROOTFS_IMAGE).qcow2
