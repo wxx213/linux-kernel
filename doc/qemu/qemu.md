@@ -19,11 +19,13 @@ qemu-system-x86_64 -smp 1 -m 2048 -enable-kvm -nographic -hda openeuler.img -cdr
 启动
 
 ```shell
+# 提供vnc连接方式，通过vnc client连接vnc 5901端口
 qemu-system-x86_64 -smp 1 -m 2048M -nographic -enable-kvm -hda openeuler.img -vnc :1
+
+# 提供ssh连接方式，通过ssh命令连接
+qemu-system-x86_64 -smp 1 -m 2048M -nographic -enable-kvm -hda openeuler.img -net nic -net user,hostfwd=tcp::10022-:22
+
+ssh -p 10022 root@localhost
 ```
 
 
-
-# 连接虚拟机
-
-通过vnc client连接vnc 5901端口
