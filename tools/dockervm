@@ -1,0 +1,235 @@
+#!/bin/bash
+
+#set -x
+
+VMIMAGE="registry.cn-hangzhou.aliyuncs.com/wxx_image/centos:linux-kernel-runtime"
+QEMU="/opt/linux-kernel/qemu/usr/local/bin/qemu-system-x86_64"
+CPUS=2
+MEMORY=4096M
+KERNEL_IMAGE="/opt/linux-kernel/bzImage"
+KERNEL_CMDLINE="\"root=/dev/vda rw rootfstype=ext4 console=ttyS0 crashkernel=64M@16M\""
+ROOTFS_IMAGE="/opt/linux-kernel/qemu-root.img"
+QEMU_NET_SCRIPT="/opt/linux-kernel/qemu/etc/qemu-ifup"
+QEMU_NET_DOWNSCRIPT="/opt/linux-kernel/qemu/etc/qemu-ifdown"
+QEMU_NET_MAC=$(echo 52:`od /dev/urandom -w5 -tx1 -An|head -n 1|sed -e 's/ //' -e 's/ /:/g'`)
+QEMU_SOCK="/opt/linux-kernel/serial.sock"
+
+CONTAINERID=""
+LIKE_HOST_NET_OPT=""
+
+LIKE_HOST_NET="no"
+
+CONTAINER_NAME=""
+
+IFNAME=br0
+CONTAINER_IFNAME=eth0
+FAMILY_FLAG="-4"
+
+function try_exec() {
+        $@
+        if [ $? -ne 0 ]
+        then
+                exit 1
+        fi
+}
+
+function create_container_network() {
+	if [ -z "$1" ]; then
+    	return 1
+  	fi
+  	local cid=$1
+  	GATEWAY=`route -n | grep $IFNAME | grep UG | awk '{print $2}'`
+        if [ $? -ne 0 ]
+        then
+                return 1
+        fi
+
+        DOCKERPID=`docker inspect --format='{{ .State.Pid }}' "$cid"`
+        if [ $? -ne 0 ]
+        then
+                return 1
+        fi
+        DOCKERCID=`docker inspect --format='{{ .ID }}' "$cid"`
+        if [ $? -ne 0 ]
+        then
+          return 1
+        fi
+
+        DOCKERCNAME=`docker inspect --format='{{ .Name }}' "$cid"`
+        if [ $? -ne 0 ]
+    then
+                return 1
+        fi
+
+
+        NSPID=$DOCKERPID
+
+        LOCAL_IFNAME="v${CONTAINER_IFNAME}pl${NSPID}"
+        GUEST_IFNAME="v${CONTAINER_IFNAME}pg${NSPID}"
+        MTU=`ip link show "$IFNAME" | awk '{print $5}'`
+        if [ $? -ne 0 ]
+    then
+        return 1
+    fi
+
+        #
+        try_exec mkdir -p /var/run/netns
+        try_exec rm -f "/var/run/netns/$NSPID"
+        try_exec ln -s "/proc/$NSPID/ns/net" "/var/run/netns/$NSPID"
+
+        # create veth-pair
+        try_exec ip link add name "$LOCAL_IFNAME" mtu "$MTU" type veth peer name "$GUEST_IFNAME" mtu "$MTU"
+        try_exec ip link set "$LOCAL_IFNAME" master "$IFNAME" > /dev/null 2>&1
+        try_exec ip link set "$LOCAL_IFNAME" up
+
+        # set veth-pair with container namespace
+        try_exec ip link set "$GUEST_IFNAME" netns "$NSPID"
+        try_exec ip netns exec "$NSPID" ip link set "$GUEST_IFNAME" name "$CONTAINER_IFNAME"
+        # Remove NSPID to avoid `ip netns` catch it.
+        try_exec rm -f "/var/run/netns/$NSPID"
+}
+
+function parse_create_arg() {
+	while getopts ":N:n:" OPTION
+	do
+		case $OPTION in
+			N ) NET_TYPE="$OPTARG";;
+			n ) CONTAINER_NAME="$OPTARG";;
+		esac
+	done
+	if [ "$NET_TYPE" = "like_host" ]; then
+		LIKE_HOST_NET="yes"
+	fi
+}
+
+
+function create() {
+	local name_opt=""
+	local dhcp_name_opt=""
+
+	if [ -n "$CONTAINER_NAME" ]; then
+		local name_opt="--name $CONTAINER_NAME"
+		local dhcp_name_opt="--name ${CONTAINER_NAME}_dhcp"
+	fi
+	if [ "$LIKE_HOST_NET" = "yes" ]; then 
+		local dhcp_cid=$(docker run -itd $dhcp_name_opt --cap-add NET_ADMIN --net=none registry.cn-hangzhou.aliyuncs.com/wxx_image/centos:wxx)
+		if [ -z $dhcp_cid ]; then
+			echo "create dhcp container error"
+			exit 1
+		fi
+		try_exec create_container_network $dhcp_cid
+		try_exec docker exec -it $dhcp_cid  dhclient $CONTAINER_IFNAME >/dev/null
+		LIKE_HOST_NET_OPT="--net container:$dhcp_cid --env NET_CONTAINERID=$dhcp_cid"
+	fi
+	docker run -td $name_opt --cap-add NET_ADMIN $LIKE_HOST_NET_OPT --device /dev/net/tun:/dev/net/tun:rw \
+		--device /dev/kvm:/dev/kvm:rw $VMIMAGE bash -c "$QEMU -smp $CPUS -m $MEMORY -kernel $KERNEL_IMAGE \
+		-nographic -append $KERNEL_CMDLINE -enable-kvm -cpu qemu64,svm=on,npt=on \
+		-drive file=$ROOTFS_IMAGE,if=none,id=drive-virtio-disk0 \
+		-device virtio-blk-pci,scsi=off,num-queues=2,drive=drive-virtio-disk0,id=virtio-disk0,disable-legacy=on,disable-modern=off,iommu_platform=on,ats=on \
+		-netdev tap,id=hostnet0,script=$QEMU_NET_SCRIPT,downscript=$QEMU_NET_DOWNSCRIPT \
+		-device virtio-net-pci,netdev=hostnet0,id=net0,mac=$QEMU_NET_MAC \
+		-fsdev local,security_model=passthrough,id=fsdev0,path=/var/share \
+		-device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare \
+		-serial unix:$QEMU_SOCK,server,nowait"
+}
+
+function parse_start_arg() {
+        CONTAINERID=$1
+        if [ -z "$CONTAINERID" ]; then
+                echo "Invalid container id"
+                exit 1
+        fi
+}
+
+function start() {
+	local dhcp_cid_env=$(docker inspect -f '{{range $index, $value := .Config.Env}}{{println $value}}{{end}}' $CONTAINERID | grep NET_CONTAINERID)
+	if [ -n "$dhcp_cid_env" ]; then
+		local dhcp_cid=$(echo $dhcp_cid_env | cut -d = -f 2)
+		stat=`docker inspect --format {{.State.Status}} $dhcp_cid`
+		if [ "$stat" != "running" ]; then
+			try_exec docker start $dhcp_cid
+			try_exec create_container_network $dhcp_cid
+			try_exec docker exec -it $dhcp_cid dhclient $CONTAINER_IFNAME >/dev/null
+		fi
+	fi
+	stat=`docker inspect --format {{.State.Status}} $CONTAINERID`
+	if [ "$stat" != "running" ]; then
+		try_exec docker start $CONTAINERID
+	fi
+}
+
+function parse_attach_arg() {
+	CONTAINERID=$1
+	if [ -z "$CONTAINERID" ]; then
+		echo "Invalid container id"
+		exit 1
+	fi
+}
+
+# exit with "control + q"
+function attach() {
+	docker exec -it $CONTAINERID socat "stdin,raw,echo=0,escape=0x11" "unix-connect:${QEMU_SOCK}"
+}
+
+
+function parse_delete_arg() {
+    CONTAINERID=$1
+    if [ -z "$CONTAINERID" ]; then
+        echo "Invalid container id"
+        exit 1
+    fi
+}
+
+function delete() {
+	local dhcp_cid_env=$(docker inspect -f '{{range $index, $value := .Config.Env}}{{println $value}}{{end}}' $CONTAINERID | grep NET_CONTAINERID)
+	docker rm -f $CONTAINERID
+	if [ -n "$dhcp_cid_env" ]; then
+		local dhcp_cid=$(echo $dhcp_cid_env | cut -d = -f 2)
+		docker rm -f $dhcp_cid
+	fi
+	
+}
+
+function usage() {
+	echo ""
+	echo "Usage:  dockervm COMMAND"
+	echo ""
+	echo "A tool to run vm in docker container"
+	echo ""
+	echo "  dockervm create [-N like_host|default -n NAME]"
+	echo "  dockervm start  CONTAINER"
+	echo "  dockervm attach CONTAINER"
+	echo "  dockervm rm     CONTAINER"
+}
+
+function main() {
+	if [ $# -lt 1 ]; then
+		usage
+		exit 0
+	fi
+	OPTYPE=$1
+
+	if [ $OPTYPE = "create" ]; then
+		shift 1
+		parse_create_arg $*
+		create
+	elif [ $OPTYPE = "start" ]; then
+		shift 1
+		parse_start_arg $*
+		start
+	elif [ $OPTYPE = "attach" ]; then
+		shift 1
+		parse_attach_arg $*
+		attach
+	elif [ $OPTYPE = "rm" ]; then
+		shift 1
+		parse_delete_arg $*
+		delete
+	else
+		echo "Invalid command"
+		usage
+		exit 1
+	fi
+}
+
+main $@
