@@ -12,7 +12,9 @@ qemu-img create openeuler.img 20G
 qemu-system-x86_64 -smp 1 -m 2048 -enable-kvm -nographic -hda openeuler.img -cdrom openEuler-22.03-LTS-x86_64-dvd.iso -vnc :1
 ```
 
-通过vnc client连接vnc端口，按照提示装机即可
+通过vnc client连接vnc端口，按照提示装机即可，装机完成后在内核命令行添加"console=ttyS0"，使得内核日志可以被qemu打印在标准输出
+
+
 
 # 启动虚拟机
 
